@@ -21,8 +21,7 @@ import { auditRoutes } from './routes/auditRoutes.js';
 import { notificationRoutes } from './routes/notificationRoutes.js';
 import { holidayRoutes } from './routes/holidayRoutes.js';
 import { userRoutes } from './routes/userRoutes.js';
-import { docsRoutes } from './routes/docsRoutes.js'; // Copilot
-import { calendarRoutes } from './routes/calendarRoutes.js'; // Copilot
+import { calendarRoutes } from './routes/calendarRoutes.js';
 import crypto from 'node:crypto';
 import { NotificationService } from './services/NotificationService.js';
 import { NotificationRepository } from './repositories/NotificationRepository.js';
@@ -95,7 +94,6 @@ export function createApp({ db, config, services = createServices(db, config) })
   app.get('/api/policy', (_req, res) =>
     res.json({ ...POLICY, leaveTypes: LEAVE_TYPES, allowedExtensions: Object.values(ALLOWED_UPLOADS).flat() }),
   );
-  app.use('/api/docs', docsRoutes()); // Copilot
   app.use('/api/auth', authRoutes({ authService: services.authService, audit: services.audit, config }));
 
   // Everything below requires a signed-in user.
@@ -106,7 +104,7 @@ export function createApp({ db, config, services = createServices(db, config) })
   api.use(notificationRoutes({ db, services })); // Copilot
   api.use(holidayRoutes({ holidayService: services.holidayService })); // Codex
   api.use(userRoutes({ db, services, config })); // Claude
-  api.use(calendarRoutes({ services })); // Copilot
+  api.use(calendarRoutes({ services }));
   app.use('/api', api);
 
   app.use('/api', (req) => {
