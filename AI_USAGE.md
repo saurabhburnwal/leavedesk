@@ -6,10 +6,10 @@ I built this project with four AI coding agents working **in parallel**, the way
 
 | Agent | Role | Delivered |
 |-------|------|-----------|
-| **Claude Code** | Lead / integrator | Requirements breakdown, architecture, core leave workflow (state machine, validation, RBAC), sign-up + email verification, HOD Team page, app shell + light/dark switcher, tamper-evident audit log, request IDs, reviewing and merging the other agents' work, browser QA, docs |
+| **Claude Code** | Lead / integrator | Requirements breakdown, architecture, core leave workflow (state machine, validation, RBAC), sign-up + email verification, HOD Team page, app shell + light/dark switcher, tamper-evident audit log, request IDs, calendar (.ics) export, CI, the Groq AI assistant, deployment (Render), reviewing/fixing/merging the other agents' work, browser QA, docs |
 | **OpenAI Codex** | Backend-heavy features | Leave balances, public holidays, half-day leave, dashboard redesign |
-| **GitHub Copilot CLI** | Self-contained features | In-app notifications, range-picker calendar, API docs / calendar export / CI |
-| **Google Antigravity** | Visual design | Login/Register redesign, dashboard illustration |
+| **GitHub Copilot CLI** | Self-contained features | In-app notifications, range-picker calendar on the Apply form |
+| **Google Antigravity** | Visual design | Login/Register redesign and the dashboard illustration (its stylesheet was later rewritten by Claude to fix layout bugs) |
 
 ## How parallel work was coordinated
 
