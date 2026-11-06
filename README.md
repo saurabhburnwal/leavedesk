@@ -87,10 +87,10 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 | Manager: view documents | Inline *View* (opens in new tab) and *Download* |
 | Manager: ask for more information | *Ask for more info*. Status becomes **Info requested**; the employee replies (optionally with files) and the request returns to the same approver |
 | **> 3 consecutive working days** | Document is mandatory, and approval goes **Manager → HOD**. Enforced on the server, mirrored in the UI |
-| Audit logs *(plus)* | Append-only `audit_logs` table (database triggers block UPDATE/DELETE); HOD *Audit log* page with filters |
+| Audit logs *(plus)* | Append-only, **hash-chained** `audit_logs` table (DB triggers block UPDATE/DELETE; SHA-256 chain detects tampering); HOD *Audit log* page with filters and an integrity badge |
 | Friendly error messages *(plus)* | Every API error has the form `{ error: { code, message, fields } }` and is shown inline and as a toast |
 | Color coding *(plus)* | Amber = pending, blue = info requested, green = approved, red = rejected, grey = cancelled; leave types have their own colors |
-| Responsive *(plus)* | Works from 360 px phones to desktop; tables become cards on mobile; light and dark themes |
+| Responsive *(plus)* | Works from 360 px phones to desktop (sidebar becomes a slide-in drawer, tables become cards); **light/dark theme switcher** (defaults to the OS setting) |
 | Sign-up + email verification *(extra)* | Self-registration as Employee, 6-digit code by email (Resend) or on screen in demo mode; show/hide password toggle |
 | Team management *(extra)* | HOD **Team** page: promote Employee ↔ Manager, change reporting manager (guards for direct reports, pending approvals, loops) |
 | Leave balances *(extra)* | Yearly allowance per type (Casual 12, Sick 10, Earned 15, Unpaid unlimited). "N days left" on the form, balance cards on the dashboard, the employee's balance shown to approvers; over-balance requests are blocked |
@@ -206,6 +206,7 @@ All endpoints are under `/api` and return JSON. Errors are always `{ "error": { 
 | POST | `/leaves/:id/request-info` | current approver | Ask for more info (`comment` required) |
 | GET | `/documents/:id[?download=1]` | involved users | View / download a file |
 | GET | `/audit-logs?action=&offset=` | HOD | Department audit trail |
+| GET | `/audit-logs/verify` | HOD | Recompute the audit hash chain (integrity check) |
 | GET | `/auth/register-options` | public | Departments and managers for the sign-up form |
 | POST | `/auth/register` | public | Create an Employee account and send a verification code |
 | POST | `/auth/verify` | public | Confirm the 6-digit code (signs the user in) |
@@ -242,7 +243,8 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 * **RBAC** on every route and **object-level checks** in the service: users who aren't involved get *404* (not 403), so request IDs can't be probed.
 * All input is validated server-side with **zod**, and all SQL is parameterised.
 * Uploads: MIME type **and** extension allow-list, size/count limits, stored under random names outside the web root, served only after a permission check (`Cache-Control: no-store`). Rejected uploads are deleted.
-* `helmet` security headers (CSP, nosniff, frame protection). Errors never leak stack traces.
+* `helmet` security headers (CSP, nosniff, frame protection). Errors never leak stack traces; unexpected errors return a **request ID** (also in the `X-Request-Id` header and the server log) so a report can be traced.
+* **Tamper-evident audit log:** besides DB triggers that block UPDATE/DELETE, every audit row stores `row_hash = SHA-256(prev_hash + content)`. `GET /api/audit-logs/verify` recomputes the chain; the HOD's Audit log page shows **"✓ Integrity verified"** or the first tampered entry.
 * The JWT secret is taken from `JWT_SECRET`, or generated randomly on first run and stored in `data/` (never committed).
 
 ## 7. Tests
@@ -251,7 +253,7 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 npm test
 ```
 
-31 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
+33 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability and tamper detection, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
 
 ## 8. Configuration
 
@@ -275,4 +277,4 @@ Variables can also go in a `.env` file in the project root (see `.env.example`).
 
 ## 10. AI-assisted development
 
-This project was built with several AI coding assistants working in parallel: Claude Code (architecture, core workflow, auth, integration/merging and browser testing), OpenAI Codex (leave balances, holidays, half-day) and GitHub Copilot (in-app notifications). Each agent worked on its own git branch with file-ownership rules in `AGENTS.md`, and every branch was reviewed, tested and merged. Every design decision was reviewed and made by me, including the stack, the SQLite-vs-Supabase choice, and counting working days instead of calendar days. Every feature was verified with automated tests and by clicking through the UI.
+Built with four AI coding agents working in parallel (Claude Code as lead/integrator, OpenAI Codex, GitHub Copilot CLI, Google Antigravity), coordinated through `AGENTS.md` (architecture rules + file ownership) and git, with every change reviewed, tested and clicked through before merging. The human made the product decisions. Full details, lessons learned and responsible-AI notes: **[AI_USAGE.md](AI_USAGE.md)**.
