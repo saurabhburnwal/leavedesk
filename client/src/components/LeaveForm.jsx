@@ -6,6 +6,8 @@ import { listHolidays } from '../api/holidays.js';
 import { getLeaveBalances } from '../api/leavePolicy.js';
 import { Field } from './ui.jsx';
 import { FileInput } from './FileInput.jsx';
+import { RangeCalendar } from './RangeCalendar.jsx';
+import '../styles/calendar.css';
 
 const EMPTY = { leaveType: 'CASUAL', dayPart: 'FULL', fromDate: '', toDate: '', reason: '' };
 
@@ -58,6 +60,10 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, existing
     });
     setServerErrors((s) => ({ ...s, [name]: undefined }));
   };
+  const setDateRange = (fromDate, toDate) => {
+    setValues((v) => ({ ...v, fromDate, toDate }));
+    setServerErrors((s) => ({ ...s, fromDate: undefined, toDate: undefined }));
+  };
   const blur = (name) => () => setTouched((t) => ({ ...t, [name]: true }));
   const errorFor = (name) => serverErrors[name] || (touched[name] ? errors[name] : undefined);
 
@@ -95,82 +101,98 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, existing
     <form className="leave-form" onSubmit={handleSubmit} noValidate>
       <div className="form-grid">
         <div className="card form-card">
-          <Field label="Leave type" htmlFor="leaveType" error={errorFor('leaveType')} required>
-            <div className="segmented" role="radiogroup" aria-label="Leave type">
-              {policy.leaveTypes.map((type) => (
-                <label key={type} className={`segment type-${type.toLowerCase()} ${values.leaveType === type ? 'active' : ''}`}>
-                  <input type="radio" name="leaveType" value={type} checked={values.leaveType === type} onChange={set('leaveType')} />
-                  <span>{LEAVE_TYPE_META[type]?.short ?? type}</span>
-                  {balances?.byType?.[type] && <small className="balance-chip">{balances.byType[type].available === null ? 'Unlimited' : `${balances.byType[type].available} days left`}</small>}
-                </label>
-              ))}
+          <div className="leave-request-layout">
+            <div className="leave-request-fields">
+              <div className="leave-date-inputs">
+                <Field label="From" htmlFor="fromDate" error={errorFor('fromDate')} required>
+                  <input
+                    id="fromDate"
+                    type="date"
+                    value={values.fromDate}
+                    min={minDate}
+                    max={maxDate}
+                    onChange={set('fromDate')}
+                    onBlur={blur('fromDate')}
+                    aria-invalid={!!errorFor('fromDate')}
+                  />
+                </Field>
+                <Field label="To" htmlFor="toDate" error={errorFor('toDate')} required>
+                  <input
+                    id="toDate"
+                    type="date"
+                    value={values.toDate}
+                    min={values.fromDate || minDate}
+                    max={maxDate}
+                    onChange={set('toDate')}
+                    onBlur={blur('toDate')}
+                    aria-invalid={!!errorFor('toDate')}
+                  />
+                </Field>
+                <div className="leave-days-box" aria-live="polite">
+                  <span>Days</span>
+                  <strong>{workingDays || '—'}</strong>
+                </div>
+              </div>
+
+              <Field label="Leave type" htmlFor="leaveType" error={errorFor('leaveType')} required>
+                <div className="segmented" role="radiogroup" aria-label="Leave type">
+                  {policy.leaveTypes.map((type) => (
+                    <label key={type} className={`segment type-${type.toLowerCase()} ${values.leaveType === type ? 'active' : ''}`}>
+                      <input type="radio" name="leaveType" value={type} checked={values.leaveType === type} onChange={set('leaveType')} />
+                      <span>{LEAVE_TYPE_META[type]?.short ?? type}</span>
+                      {balances?.byType?.[type] && <small className="balance-chip">{balances.byType[type].available === null ? 'Unlimited' : `${balances.byType[type].available} days left`}</small>}
+                    </label>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="Part of day" htmlFor="dayPart" error={errorFor('dayPart')}>
+                <select id="dayPart" value={values.dayPart} onChange={set('dayPart')}>
+                  <option value="FULL">Full day</option>
+                  <option value="FIRST_HALF">First half</option>
+                  <option value="SECOND_HALF">Second half</option>
+                </select>
+              </Field>
+
+              <Field
+                label="Reason"
+                htmlFor="reason"
+                error={errorFor('reason')}
+                required
+                hint={`${reasonLength}/${policy.REASON_MAX} characters`}
+              >
+                <textarea
+                  id="reason"
+                  rows={4}
+                  maxLength={policy.REASON_MAX}
+                  placeholder="e.g. Family function, medical appointment, vacation…"
+                  value={values.reason}
+                  onChange={set('reason')}
+                  onBlur={blur('reason')}
+                  aria-invalid={!!errorFor('reason')}
+                />
+              </Field>
+
+              <FileInput
+                files={files}
+                onChange={(next) => {
+                  setFiles(next);
+                  setServerErrors((s) => ({ ...s, documents: undefined }));
+                }}
+                error={serverErrors.documents || (touched.documents || files.length ? errors.documents : undefined)}
+                required={isLong && existingDocumentCount === 0}
+                label={existingDocumentCount ? `Add more documents (${existingDocumentCount} already attached)` : 'Supporting documents'}
+              />
             </div>
-          </Field>
-
-          <Field label="Part of day" htmlFor="dayPart" error={errorFor('dayPart')}>
-            <select id="dayPart" value={values.dayPart} onChange={set('dayPart')}>
-              <option value="FULL">Full day</option>
-              <option value="FIRST_HALF">First half</option>
-              <option value="SECOND_HALF">Second half</option>
-            </select>
-          </Field>
-
-          <div className="row-2">
-            <Field label="From" htmlFor="fromDate" error={errorFor('fromDate')} required>
-              <input
-                id="fromDate"
-                type="date"
-                value={values.fromDate}
-                min={minDate}
-                max={maxDate}
-                onChange={set('fromDate')}
-                onBlur={blur('fromDate')}
-                aria-invalid={!!errorFor('fromDate')}
-              />
-            </Field>
-            <Field label="To" htmlFor="toDate" error={errorFor('toDate')} required>
-              <input
-                id="toDate"
-                type="date"
-                value={values.toDate}
-                min={values.fromDate || minDate}
-                max={maxDate}
-                onChange={set('toDate')}
-                onBlur={blur('toDate')}
-                aria-invalid={!!errorFor('toDate')}
-              />
-            </Field>
-          </div>
-
-          <Field
-            label="Reason"
-            htmlFor="reason"
-            error={errorFor('reason')}
-            required
-            hint={`${reasonLength}/${policy.REASON_MAX} characters`}
-          >
-            <textarea
-              id="reason"
-              rows={4}
-              maxLength={policy.REASON_MAX}
-              placeholder="e.g. Family function, medical appointment, vacation…"
-              value={values.reason}
-              onChange={set('reason')}
-              onBlur={blur('reason')}
-              aria-invalid={!!errorFor('reason')}
+            <RangeCalendar
+              fromDate={values.fromDate}
+              toDate={values.toDate}
+              minDate={minDate}
+              maxDate={maxDate}
+              holidays={holidays}
+              onChange={setDateRange}
             />
-          </Field>
-
-          <FileInput
-            files={files}
-            onChange={(next) => {
-              setFiles(next);
-              setServerErrors((s) => ({ ...s, documents: undefined }));
-            }}
-            error={serverErrors.documents || (touched.documents || files.length ? errors.documents : undefined)}
-            required={isLong && existingDocumentCount === 0}
-            label={existingDocumentCount ? `Add more documents (${existingDocumentCount} already attached)` : 'Supporting documents'}
-          />
+          </div>
         </div>
 
         <aside className="card summary-card" aria-live="polite">

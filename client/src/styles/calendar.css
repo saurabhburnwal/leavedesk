@@ -1,1 +1,223 @@
-/* Owned by the calendar redesign. Use the CSS variables from styles.css (no hard-coded colors) so dark mode keeps working. */
+/* Owned by the calendar redesign. Use the CSS variables from styles.css so dark mode keeps working. */
+.leave-request-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.leave-date-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 64px;
+  gap: 12px;
+  align-items: start;
+}
+
+.leave-days-box {
+  display: grid;
+  gap: 2px;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.leave-days-box strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.range-calendar {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.range-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.range-calendar-header h3 {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.range-calendar-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.range-calendar-nav:hover:not(:disabled) {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.range-calendar-nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.range-calendar-weekdays,
+.range-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.range-calendar-weekdays {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.range-calendar-grid {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.range-calendar-empty,
+.range-calendar-day {
+  min-width: 0;
+  height: 42px;
+}
+
+.range-calendar-empty {
+  display: block;
+}
+
+.range-calendar-day {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.range-calendar-day::before {
+  position: absolute;
+  z-index: -1;
+  inset: 4px 0;
+  content: '';
+  background: transparent;
+}
+
+.range-calendar-day > span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+}
+
+.range-calendar-day:hover:not(:disabled):not(.is-range-start):not(.is-range-end) > span {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.range-calendar-day.is-in-range::before {
+  background: var(--primary-soft);
+}
+
+.range-calendar-day.is-range-start::before {
+  border-radius: 12px 0 0 12px;
+}
+
+.range-calendar-day.is-range-end::before {
+  border-radius: 0 12px 12px 0;
+}
+
+.range-calendar-day.is-range-start > span,
+.range-calendar-day.is-range-end > span {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--surface);
+  font-weight: 800;
+}
+
+.range-calendar-day.is-range-start.is-range-end::before {
+  background: transparent;
+}
+
+.range-calendar-day.is-today:not(.is-range-start):not(.is-range-end) > span {
+  border-color: var(--primary);
+}
+
+.range-calendar-day.is-weekend,
+.range-calendar-day.is-holiday {
+  color: var(--muted);
+}
+
+.range-calendar-day.is-holiday i {
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--info-dot);
+}
+
+.range-calendar-day.is-disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.range-calendar-day.is-disabled > span {
+  text-decoration: line-through;
+}
+
+.range-calendar-hint {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .leave-request-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .leave-date-inputs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .leave-days-box {
+    grid-column: span 2;
+  }
+
+  .range-calendar {
+    padding: 14px 10px;
+  }
+}
+
+.leave-date-inputs input[type="date"] { padding-left: 10px; padding-right: 8px; }
