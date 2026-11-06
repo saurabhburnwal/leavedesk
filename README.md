@@ -68,7 +68,9 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 2. **Manager (Rahul):** the *Approvals* badge shows the new request. Open it, view the document, try **Reject** without a comment (blocked), then **Approve** with a comment. The request moves to *Pending · HOD*.
 3. **HOD (Meera):** approve it. The stepper shows both levels done. Open **Audit log** to see every sign-in, decision and document view.
 4. **Employee (Ananya):** open the request marked *Info requested*, reply and attach a file. It goes back to the manager.
-5. Sign in as **Sneha (Operations manager)** and try opening an Engineering request URL such as `/leaves/1`. You get "not found", because data is isolated per team.
+5. **Sign-up:** on the login page click *Create an account*, register as an employee and enter the 6-digit code (shown on screen in demo mode). Then as **Meera** open *Team* and promote the new user to Manager.
+6. Watch the **bell** in the top bar: every decision above created a notification for the right person.
+7. Sign in as **Sneha (Operations manager)** and try opening an Engineering request URL such as `/leaves/1`. You get "not found", because data is isolated per team.
 
 ---
 
@@ -89,6 +91,12 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 | Friendly error messages *(plus)* | Every API error has the form `{ error: { code, message, fields } }` and is shown inline and as a toast |
 | Color coding *(plus)* | Amber = pending, blue = info requested, green = approved, red = rejected, grey = cancelled; leave types have their own colors |
 | Responsive *(plus)* | Works from 360 px phones to desktop; tables become cards on mobile; light and dark themes |
+| Sign-up + email verification *(extra)* | Self-registration as Employee, 6-digit code by email (Resend) or on screen in demo mode; show/hide password toggle |
+| Team management *(extra)* | HOD **Team** page: promote Employee ↔ Manager, change reporting manager (guards for direct reports, pending approvals, loops) |
+| Leave balances *(extra)* | Yearly allowance per type (Casual 12, Sick 10, Earned 15, Unpaid unlimited). "N days left" on the form, balance cards on the dashboard, the employee's balance shown to approvers; over-balance requests are blocked |
+| Public holidays *(extra)* | Holidays are excluded from working days (server and live form count). HOD adds/removes them on the **Holidays** page (audited) |
+| Half-day leave *(extra)* | Single-day requests can be Full day / First half / Second half (0.5 day); the two halves of one date can coexist |
+| In-app notifications *(extra)* | Bell with unread count: approvers hear about new requests and replies; employees about approvals, rejections (with the reason) and info requests |
 | CRUD | **C**reate request · **R**ead list/detail · **U**pdate (edit while pending; restarts approval) · **D**elete as a soft delete (*Cancel*, kept for audit) |
 
 ---
@@ -97,7 +105,8 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 
 All rules live in [`server/src/services/policy.js`](server/src/services/policy.js) and are served to the UI from `GET /api/policy`, so they are defined in one place.
 
-* **Working days:** Monday to Friday, inclusive of both dates; weekends are not counted. (Public holidays are a listed future improvement.)
+* **Working days:** Monday to Friday, inclusive of both dates; weekends **and public holidays** are not counted. A half-day counts as 0.5.
+* **Balances:** used = approved days of that type this year; pending requests reserve days; you can't request more than is available (Unpaid is unlimited).
   * The sample payload `2026-11-01 → 2026-11-05` is Sun–Thu = **4 working days**, so it is long leave.
 * **Long leave (> 3 working days):** at least one supporting document is required, and the request needs two approvals: *reporting manager* (level 1), then *department HOD* (level 2).
   * If the applicant's reporting manager **is** the HOD (e.g. a manager applying), a single HOD approval covers both levels, so the same person is not asked twice.
@@ -203,6 +212,11 @@ All endpoints are under `/api` and return JSON. Errors are always `{ "error": { 
 | POST | `/auth/resend-code` | public | Send a new code (30 s cooldown) |
 | GET | `/users/team` | HOD | Department members, roles and reporting lines |
 | PATCH | `/users/:id` | HOD | Promote/demote (Employee ↔ Manager) and change reporting manager |
+| GET | `/leaves/balances` | signed in | My leave balances for the year |
+| GET | `/holidays` | signed in | Public holiday calendar |
+| POST / DELETE | `/holidays`, `/holidays/:id` | HOD | Add / remove a holiday |
+| GET | `/notifications?limit=` | signed in | My notifications + unread count |
+| POST | `/notifications/:id/read`, `/notifications/read-all` | signed in | Mark as read |
 
 Example, using the payload from the assignment:
 
@@ -237,7 +251,7 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 npm test
 ```
 
-18 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting, date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, and audit-log immutability.
+31 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
 
 ## 8. Configuration
 
@@ -257,8 +271,8 @@ Variables can also go in a `.env` file in the project root (see `.env.example`).
 ## 9. Trade-offs and next steps
 
 * **SQLite** was chosen so assessors can run the app with zero setup. In production I'd use PostgreSQL (the repository layer isolates the SQL) and object storage (S3) for documents.
-* **Next:** email/Slack notifications, public-holiday calendar per location, leave balances and accrual, delegation when an approver is on leave, SSO, and a reporting dashboard.
+* **Next:** email/Slack notifications (the notification service is the hook), holiday calendars per location, balance carry-forward/accrual, delegation when an approver is on leave, an AI assistant that fills the form from plain English, SSO, and a reporting dashboard.
 
 ## 10. AI-assisted development
 
-This project was built with AI coding assistants as pair programmers (design discussion, code generation, test writing and UI review through browser automation). Every design decision was reviewed and made by me, including the stack, the SQLite-vs-Supabase choice, and counting working days instead of calendar days. Every feature was verified with automated tests and by clicking through the UI.
+This project was built with several AI coding assistants working in parallel: Claude Code (architecture, core workflow, auth, integration/merging and browser testing), OpenAI Codex (leave balances, holidays, half-day) and GitHub Copilot (in-app notifications). Each agent worked on its own git branch with file-ownership rules in `AGENTS.md`, and every branch was reviewed, tested and merged. Every design decision was reviewed and made by me, including the stack, the SQLite-vs-Supabase choice, and counting working days instead of calendar days. Every feature was verified with automated tests and by clicking through the UI.
