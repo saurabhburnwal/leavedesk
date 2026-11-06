@@ -30,6 +30,9 @@ export function loadConfig(overrides = {}) {
     // Set COOKIE_SECURE=true when the app is served over HTTPS.
     cookieSecure: process.env.COOKIE_SECURE === 'true',
     loginRateLimit: Number(process.env.LOGIN_RATE_LIMIT) || 20,
+    // Behind a hosting proxy (Render, Nginx…) set TRUST_PROXY=1 so client IPs (audit log,
+    // login rate limit) come from X-Forwarded-For instead of the proxy's address.
+    trustProxy: process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY : false,
     seedDemoData: process.env.SEED_DEMO_DATA !== 'false',
     resendApiKey: process.env.RESEND_API_KEY || null,
     emailFrom: process.env.EMAIL_FROM || 'LeaveDesk <onboarding@resend.dev>',

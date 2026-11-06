@@ -1,5 +1,8 @@
 # LeaveDesk: Employee Leave Management System
 
+[![CI](https://github.com/saurabhburnwal/leavedesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhburnwal/leavedesk/actions/workflows/ci.yml)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/saurabhburnwal/leavedesk)
+
 A web portal where employees apply for leave and managers / HODs approve or reject it. Long leave (more than 3 working days) requires supporting documents and a two-level approval: **Manager, then HOD**.
 
 **Stack:** React 19 (Vite) · Node.js + Express 5 · SQLite (Node's built-in `node:sqlite`) · JWT auth · zod validation
@@ -269,6 +272,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the tests and the UI build on e
 | `SESSION_HOURS` | `8` | Session length |
 | `COOKIE_SECURE` | `false` | Set `true` when served over HTTPS |
 | `SEED_DEMO_DATA` | `true` | Load demo users/requests into an empty database |
+| `TRUST_PROXY` | *(off)* | Set to `1` behind a hosting proxy (Render, Nginx) so client IPs are correct for the audit log and rate limit |
 | `RESEND_API_KEY` | *(empty = demo mode)* | Send verification codes by email through Resend |
 | `EMAIL_FROM` | `LeaveDesk <onboarding@resend.dev>` | Sender address (must be on a domain verified in Resend) |
 

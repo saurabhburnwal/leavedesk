@@ -1,0 +1,18 @@
+# Render Blueprint: one-click deploy of the live demo (free plan, builds the Dockerfile).
+# Data lives on the container's disk, so the demo data is re-seeded whenever the service restarts.
+services:
+  - type: web
+    name: leavedesk
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: TRUST_PROXY
+        value: "1"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      # Leave RESEND_API_KEY unset for demo mode (verification code shown on screen).

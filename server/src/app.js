@@ -67,6 +67,7 @@ export function createServices(db, config, { clock } = {}) {
 export function createApp({ db, config, services = createServices(db, config) }) {
   const app = express();
   app.disable('x-powered-by');
+  if (config.trustProxy) app.set('trust proxy', config.trustProxy);
 
   // Request ID: returned in the X-Request-Id header and printed with server errors,
   // so a user's error report can be matched to the log line.
