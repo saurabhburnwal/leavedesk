@@ -32,6 +32,8 @@ Open **http://localhost:3000**.
 
 Open **http://localhost:3000**. On the first run the script installs dependencies, builds the UI, creates the database and loads demo data. Nothing else is needed: no database server, no `.env` file.
 
+> **Keys:** if your copy includes a `.env` file (the submitted zip does), the **AI assistant** and **real verification emails** (from `noreply@leavedesk.me`) are switched on automatically, for both `npm start` and `docker compose up`. Without a `.env`, the app runs in demo mode: AI is hidden and the sign-up code is shown on screen.
+
 > Check your Node version with `node -v`. On older Node, use Docker (Option A) or install the current LTS from https://nodejs.org.
 
 ### Useful commands
