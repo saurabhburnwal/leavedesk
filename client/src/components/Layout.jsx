@@ -5,6 +5,7 @@ import { useAuth, useToast } from '../context.jsx';
 import { ROLE_LABEL, isApproverRole } from '../utils.js';
 import { Avatar } from './ui.jsx';
 import { NotificationBell } from './NotificationBell.jsx'; // Copilot
+import { applyTheme, effectiveTheme } from '../theme.js';
 
 /** Small line icons (inline SVG, no icon library needed). */
 const ICONS = {
@@ -16,6 +17,8 @@ const ICONS = {
   holidays: 'M3 4h18v18H3zM16 2v4M8 2v4M3 10h18',
   audit: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  moon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
 };
 
 export function Icon({ name, size = 20 }) {
@@ -33,6 +36,13 @@ export function Layout() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [theme, setTheme] = useState(() => effectiveTheme());
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    setTheme(next);
+  }
   const approver = isApproverRole(user.role);
   const canApply = user.role !== 'HOD';
 
@@ -86,6 +96,17 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        <button
+          className="side-link theme-toggle"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+        >
+          <span className="side-icon">
+            <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+          </span>
+          <span className="side-label">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+        </button>
         <button className="side-link side-logout" onClick={handleLogout}>
           <span className="side-icon">
             <Icon name="logout" />

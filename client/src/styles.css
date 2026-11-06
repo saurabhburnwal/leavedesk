@@ -39,8 +39,9 @@
   --unpaid-fg: #4b5568; --unpaid-bg: #eef1f5;
 }
 
+/* Dark theme: follows the OS unless the user picked a theme with the toggle (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: #0e1120;
     --surface: #161a2d;
@@ -72,6 +73,40 @@
     --unpaid-fg: #cbd5e1; --unpaid-bg: rgba(148, 163, 184, 0.14);
   }
 }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1120;
+  --surface: #161a2d;
+  --surface-2: #1e2340;
+  --border: #2a3052;
+  --text: #e8eaf5;
+  --muted: #9ba2c0;
+  --primary: #8b9bff;
+  --primary-hover: #a7b3ff;
+  --primary-soft: rgba(139, 155, 255, 0.14);
+  --on-primary: #0e1120;
+  --sidebar-from: #2f4fc4;
+  --sidebar-to: #4b2aa8;
+  --blob-1: rgba(255, 170, 90, 0.10);
+  --blob-2: rgba(140, 120, 255, 0.14);
+  --blob-3: rgba(80, 160, 255, 0.10);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  --pending-fg: #fcd34d;  --pending-bg: rgba(245, 158, 11, 0.16);
+  --info-fg: #7dd3fc;     --info-bg: rgba(14, 165, 233, 0.16);
+  --approved-fg: #86efac; --approved-bg: rgba(34, 197, 94, 0.15);
+  --rejected-fg: #fca5a5; --rejected-bg: rgba(239, 68, 68, 0.16);
+  --cancelled-fg: #cbd5e1; --cancelled-bg: rgba(148, 163, 184, 0.14);
+  --neutral-fg: #c7cce0;  --neutral-bg: rgba(148, 163, 184, 0.12);
+
+  --casual-fg: #5eead4; --casual-bg: rgba(20, 184, 166, 0.15);
+  --sick-fg: #fda4af;   --sick-bg: rgba(244, 63, 94, 0.15);
+  --earned-fg: #c4b5fd; --earned-bg: rgba(139, 92, 246, 0.17);
+  --unpaid-fg: #cbd5e1; --unpaid-bg: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
 
 /* ------------------------------------------------------------------ base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -508,3 +543,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--f
 .employee-balances { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; }
 .employee-balances p { margin: 7px 0; font-size: .85rem; }
 @media (max-width: 480px) { .holiday-list li { align-items: flex-start; } .balance-chip { white-space: normal; } }
+
+/* ===== theme toggle (Claude) ===== */
+.theme-toggle { margin-top: 4px; }
+.side-link.theme-toggle .side-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(255, 255, 255, 0.16); }
