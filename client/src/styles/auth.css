@@ -1,1 +1,122 @@
-/* Owned by the auth redesign. Use the CSS variables from styles.css (no hard-coded colors) so dark mode keeps working. */
+/* ===== Login / Register / Verify pages =====
+   Selectors are prefixed with "body .login-page" so they win over the base rules in styles.css
+   regardless of the order Vite injects the stylesheets. Colors come from the theme variables. */
+
+body .login-page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 20px;
+  padding: 24px 16px;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  body .login-page {
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 470px);
+    align-items: center;
+    gap: 56px;
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 32px 48px;
+  }
+}
+
+/* soft color blobs behind everything */
+.login-page .auth-blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.login-page .auth-blob { position: absolute; border-radius: 50%; filter: blur(70px); }
+.login-page .auth-blob-1 { width: 460px; height: 460px; top: -140px; left: -100px; background: var(--blob-2); }
+.login-page .auth-blob-2 { width: 420px; height: 420px; bottom: -160px; right: -80px; background: var(--blob-1); }
+.login-page > * { position: relative; z-index: 1; }
+
+/* left hero panel (desktop only) */
+body .login-page .login-hero { display: none; }
+@media (min-width: 1024px) {
+  body .login-page .login-hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 44px;
+    border-radius: 28px;
+    color: #fff;
+    background: linear-gradient(150deg, var(--sidebar-from), var(--sidebar-to));
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--sidebar-to) 28%, transparent);
+  }
+  body .login-page .login-mobile-brand { display: none; }
+}
+.login-page .login-hero h1 { font-size: clamp(1.6rem, 2.5vw, 2.25rem); font-weight: 700; line-height: 1.2; max-width: 520px; }
+.login-page .login-hero .brand { color: #fff; }
+.login-page .login-hero .brand-mark { background: #fff; color: var(--sidebar-to); }
+.login-page .auth-brand-illustration {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 14px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+}
+.login-page .auth-brand-illustration svg { display: block; width: 280px; max-width: 100%; height: auto; }
+
+/* mobile brand row */
+.login-page .login-mobile-brand { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 1.25rem; }
+
+/* right column: form card + demo card */
+body .login-page .login-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 470px; margin: 0 auto; padding: 0; }
+.login-page .login-card,
+.login-page .demo-section {
+  margin: 0;
+  padding: 26px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+.login-page .login-card h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 14px; }
+
+/* demo accounts */
+.login-page .demo-section-heading h3 { font-size: 1rem; font-weight: 600; }
+.login-page .demo-hint { color: var(--muted); font-size: 0.82rem; margin: 2px 0 12px; }
+body .login-page .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+body .login-page .demo-account {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+body .login-page .demo-account:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+.login-page .demo-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.login-page .demo-tile-body { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; }
+.login-page .demo-name { font-weight: 600; font-size: 0.86rem; }
+.login-page .demo-note { max-width: 100%; overflow: hidden; color: var(--muted); font-size: 0.72rem; white-space: nowrap; text-overflow: ellipsis; }
+.login-page .demo-tile-body .role-pill { margin-top: 3px; padding: 1px 7px; font-size: 0.6rem; }
+
+@media (max-width: 420px) {
+  body .login-page .demo-grid { grid-template-columns: minmax(0, 1fr); }
+  .login-page .login-card,
+  .login-page .demo-section { padding: 20px; }
+}

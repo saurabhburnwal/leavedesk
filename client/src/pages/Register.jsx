@@ -4,6 +4,8 @@ import { AuthApi } from '../api/auth.js';
 import { useAuth, useToast } from '../context.jsx';
 import { Field, Spinner } from '../components/ui.jsx';
 import { PasswordInput, PasswordRules } from '../components/PasswordInput.jsx';
+import { HeroIllustration } from '../components/HeroIllustration.jsx';
+import '../styles/auth.css';
 
 /** OWNER: Claude. Self sign-up (always as Employee) followed by email verification. */
 export function RegisterPage() {
@@ -239,15 +241,26 @@ export function VerifyEmailPage() {
   );
 }
 
-/** Same two-panel layout as the login page. */
+/** Centered glassy card with blurred color-blob background. */
 export function AuthShell({ children }) {
   return (
     <div className="login-page">
-      <section className="login-hero">
+      {/* decorative blobs */}
+      <div className="auth-blobs" aria-hidden="true">
+        <div className="auth-blob auth-blob-1" />
+        <div className="auth-blob auth-blob-2" />
+      </div>
+
+      {/* mobile brand mark */}
+      <div className="login-mobile-brand">
+        <span className="brand-mark" aria-hidden="true">▤</span>
+        LeaveDesk
+      </div>
+
+      {/* desktop hero panel */}
+      <section className="login-hero" aria-hidden="true">
         <div className="brand brand-lg">
-          <span className="brand-mark" aria-hidden="true">
-            ▤
-          </span>
+          <span className="brand-mark">▤</span>
           LeaveDesk
         </div>
         <h1>Leave requests, approved without the email chains.</h1>
@@ -256,7 +269,12 @@ export function AuthShell({ children }) {
           <li>Manager → HOD approval for leave longer than 3 working days</li>
           <li>Comments, document review and a full audit trail</li>
         </ul>
+        <div className="auth-brand-illustration">
+          <HeroIllustration style={{ maxWidth: '100%', height: 'auto' }} />
+        </div>
       </section>
+
+      {/* glassy form panel */}
       <section className="login-panel">{children}</section>
     </div>
   );

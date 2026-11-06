@@ -3,16 +3,28 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { PasswordInput } from '../components/PasswordInput.jsx';
 import { useAuth, useToast } from '../context.jsx';
 import { Field } from '../components/ui.jsx';
+import { AuthShell } from './Register.jsx';
+import '../styles/auth.css';
 
 const DEMO_ACCOUNTS = [
-  { email: 'employee@example.com', name: 'John Doe', role: 'Employee', note: 'Engineering' },
-  { email: 'ananya@example.com', name: 'Ananya Iyer', role: 'Employee', note: 'Has an info request' },
-  { email: 'manager@example.com', name: 'Rahul Verma', role: 'Manager', note: 'Approves Engineering' },
-  { email: 'hod@example.com', name: 'Meera Nair', role: 'HOD', note: 'Level 2 + audit log' },
-  { email: 'ops.manager@example.com', name: 'Sneha Kapoor', role: 'Manager', note: 'Operations' },
-  { email: 'ops.employee@example.com', name: 'Karan Mehta', role: 'Employee', note: 'Operations' },
+  { email: 'employee@example.com',    name: 'John Doe',      role: 'Employee', note: 'Engineering' },
+  { email: 'ananya@example.com',      name: 'Ananya Iyer',   role: 'Employee', note: 'Info request' },
+  { email: 'manager@example.com',     name: 'Rahul Verma',   role: 'Manager',  note: 'Engineering' },
+  { email: 'hod@example.com',         name: 'Meera Nair',    role: 'HOD',      note: 'Audit + L2' },
+  { email: 'ops.manager@example.com', name: 'Sneha Kapoor',  role: 'Manager',  note: 'Operations' },
+  { email: 'ops.employee@example.com',name: 'Karan Mehta',   role: 'Employee', note: 'Operations' },
 ];
 const DEMO_PASSWORD = 'Password@123';
+
+/** Derive initials from a full name (up to 2 chars). */
+function initials(name) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+}
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -54,23 +66,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <section className="login-hero">
-        <div className="brand brand-lg">
-          <span className="brand-mark" aria-hidden="true">
-            ▤
-          </span>
-          LeaveDesk
-        </div>
-        <h1>Leave requests, approved without the email chains.</h1>
-        <ul className="hero-points">
-          <li>Apply in under a minute with live working-day count</li>
-          <li>Manager → HOD approval for leave longer than 3 working days</li>
-          <li>Comments, document review and a full audit trail</li>
-        </ul>
-      </section>
-
-      <section className="login-panel">
+    <AuthShell>
+        {/* Sign-in form */}
         <form
           className="card login-card"
           noValidate
@@ -112,9 +109,12 @@ export function LoginPage() {
           </p>
         </form>
 
-        <div className="card demo-card">
-          <h3>Demo accounts</h3>
-          <p className="muted small">
+        {/* Demo accounts */}
+        <div className="demo-section">
+          <div className="demo-section-heading">
+            <h3>Demo accounts</h3>
+          </div>
+          <p className="demo-hint">
             One click to sign in. Password for all: <code>{DEMO_PASSWORD}</code>
           </p>
           <div className="demo-grid">
@@ -129,14 +129,18 @@ export function LoginPage() {
                   signIn(acc.email, DEMO_PASSWORD);
                 }}
               >
-                <span className={`role-pill role-${acc.role.toLowerCase()}`}>{acc.role}</span>
-                <span className="demo-name">{acc.name}</span>
-                <span className="muted small">{acc.note}</span>
+                <span className="demo-avatar" aria-hidden="true">
+                  {initials(acc.name)}
+                </span>
+                <span className="demo-tile-body">
+                  <span className="demo-name">{acc.name}</span>
+                  <span className="demo-note">{acc.note}</span>
+                  <span className={`role-pill role-${acc.role.toLowerCase()}`}>{acc.role}</span>
+                </span>
               </button>
             ))}
           </div>
         </div>
-      </section>
-    </div>
+    </AuthShell>
   );
 }
