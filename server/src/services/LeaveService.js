@@ -361,6 +361,7 @@ export class LeaveService {
         details: { files: files.map((f) => ({ name: f.originalname, size: f.size, type: f.mimetype })) },
         ip: ctx.ip,
       });
+      this.notifier.notify('DOCUMENTS_ADDED', { leave: this.leaves.findById(leave.id), previous: leave, actor: user, comment: fileNames(files) });
     });
     return this.getDetail(user, leave.id);
   }
