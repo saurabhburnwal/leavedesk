@@ -3,6 +3,9 @@
 [![CI](https://github.com/saurabhburnwal/leavedesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saurabhburnwal/leavedesk/actions/workflows/ci.yml)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/saurabhburnwal/leavedesk)
 
+**Live demo: https://leavedesk-ol4p.onrender.com** (one-click demo logins on the sign-in page; password `Password@123`).
+On the free plan the app sleeps when idle, so the **first load can take about a minute**. Demo data resets when it restarts.
+
 A web portal where employees apply for leave and managers / HODs approve or reject it. Long leave (more than 3 working days) requires supporting documents and a two-level approval: **Manager, then HOD**.
 
 **Stack:** React 19 (Vite) · Node.js + Express 5 · SQLite (Node's built-in `node:sqlite`) · JWT auth · zod validation
@@ -294,6 +297,8 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the tests and the UI build on e
 Variables can also go in a `.env` file in the project root (see `.env.example`).
 
 ## 9. Trade-offs and next steps
+
+* **Client IPs behind Render:** Render's load balancer forwards requests from internal addresses, so the audit log shows a proxy IP and the login rate limit is shared by all demo users (raised to 300 per 15 min there). A production setup would trust the platform's verified client-IP header, or put a known reverse proxy in front, and key rate limits by account as well as by IP.
 
 * **SQLite** was chosen so assessors can run the app with zero setup. In production I'd use PostgreSQL (the repository layer isolates the SQL) and object storage (S3) for documents.
 * **Next:** email/Slack notifications (the notification service is the hook), holiday calendars per location, balance carry-forward/accrual, delegation when an approver is on leave, an AI assistant that fills the form from plain English, SSO, and a reporting dashboard.

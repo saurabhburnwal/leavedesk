@@ -9,6 +9,10 @@ services:
     envVars:
       - key: TRUST_PROXY
         value: "1"
+      # Render's load balancer hides visitor IPs from the app, so all demo users share one
+      # rate-limit bucket. A higher limit keeps assessors from locking each other out.
+      - key: LOGIN_RATE_LIMIT
+        value: "300"
       - key: COOKIE_SECURE
         value: "true"
       - key: SEED_DEMO_DATA
