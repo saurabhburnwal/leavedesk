@@ -1,0 +1,17 @@
+services:
+  leave-management:
+    build: .
+    image: leave-management-system:latest
+    container_name: leave-management-system
+    ports:
+      - "3000:3000"
+    environment:
+      # Optional: set your own secret; otherwise one is generated and stored in the volume.
+      # JWT_SECRET: change-me
+      SEED_DEMO_DATA: "true"
+    volumes:
+      - leave-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  leave-data:
