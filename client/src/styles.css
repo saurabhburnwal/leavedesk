@@ -155,7 +155,7 @@ code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; font-
   .menu-toggle { display: inline-grid; place-items: center; }
   .topbar { padding: 12px 16px; }
   .topbar .topbar-brand { display: inline-flex; }
-  .user-meta, .new-request { display: none; }
+  .topbar .user-meta, .topbar .new-request { display: none; }
   .user-chip { padding: 3px; }
 }
 @media (max-width: 420px) { .topbar-brand { font-size: 0; gap: 0; } }
