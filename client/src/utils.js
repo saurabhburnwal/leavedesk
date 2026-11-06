@@ -23,14 +23,15 @@ export function addDays(iso, days) {
 export const daysBetween = (from, to) => Math.round((parseIsoDate(to) - parseIsoDate(from)) / 86400000);
 
 /** Mirrors the server rule: Mon-Fri between the two dates, inclusive. (The server re-checks.) */
-export function countWorkingDays(fromIso, toIso) {
+export function countWorkingDays(fromIso, toIso, holidays = []) {
   const from = parseIsoDate(fromIso);
   const to = parseIsoDate(toIso);
   if (!from || !to || to < from) return 0;
   let count = 0;
+  const holidaySet = holidays instanceof Set ? holidays : new Set(holidays);
   for (const d = new Date(from); d <= to; d.setUTCDate(d.getUTCDate() + 1)) {
     const day = d.getUTCDay();
-    if (day !== 0 && day !== 6) count += 1;
+    if (day !== 0 && day !== 6 && !holidaySet.has(d.toISOString().slice(0, 10))) count += 1;
   }
   return count;
 }
@@ -117,4 +118,9 @@ export function initials(name = '') {
 
 export function pluralize(n, word, plural = `${word}s`) {
   return `${n} ${n === 1 ? word : plural}`;
+}
+
+export function formatLeaveDays(leave) {
+  if (leave.dayPart && leave.dayPart !== 'FULL') return `0.5 day · ${leave.dayPart === 'FIRST_HALF' ? 'first half' : 'second half'}`;
+  return pluralize(leave.workingDays, 'day');
 }

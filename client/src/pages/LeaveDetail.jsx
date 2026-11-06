@@ -5,7 +5,7 @@ import { useApi, useAuth, usePolicy, useToast } from '../context.jsx';
 import { Avatar, ErrorState, Field, LeaveTypeTag, Modal, PageHeader, Spinner, StatusBadge } from '../components/ui.jsx';
 import { ApprovalProgress, DocumentList, Timeline } from '../components/LeaveDetailParts.jsx';
 import { FileInput } from '../components/FileInput.jsx';
-import { formatDate, formatDateTime, isApproverRole, pluralize, STAGE_LABEL } from '../utils.js';
+import { formatDate, formatDateTime, formatLeaveDays, isApproverRole, pluralize, STAGE_LABEL } from '../utils.js';
 
 export function LeaveDetailPage() {
   const { id } = useParams();
@@ -85,7 +85,7 @@ export function LeaveDetailPage() {
               <div>
                 <dt>Working days</dt>
                 <dd>
-                  <strong>{pluralize(leave.workingDays, 'day')}</strong>
+                  <strong>{formatLeaveDays(leave)}</strong>
                   {leave.requiresDocuments && <span className="flag">2-level approval</span>}
                 </dd>
               </div>
@@ -117,10 +117,22 @@ export function LeaveDetailPage() {
                 More than 3 working days, so this request needs a supporting document and approval from both the Manager and the HOD.
               </p>
             )}
+            {!isOwner && leave.employeeBalances && <EmployeeBalances balances={leave.employeeBalances} />}
           </section>
         </aside>
       </div>
     </>
+  );
+}
+
+function EmployeeBalances({ balances }) {
+  return (
+    <div className="employee-balances">
+      <h3 className="mini-title">{balances.year} leave balance</h3>
+      {Object.entries(balances.byType).map(([type, balance]) => (
+        <p key={type}><strong>{type}</strong>: {balance.used} used · {balance.available === null ? 'unlimited' : `${balance.available} available`}{balance.pending ? ` · ${balance.pending} pending` : ''}</p>
+      ))}
+    </div>
   );
 }
 

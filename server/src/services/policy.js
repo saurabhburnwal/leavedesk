@@ -16,6 +16,7 @@ export const POLICY = Object.freeze({
   COMMENT_MAX: 1000,
   MAX_FILES_PER_UPLOAD: 5,
   MAX_FILE_SIZE_MB: 5,
+  YEARLY_ALLOWANCES: Object.freeze({ CASUAL: 12, SICK: 10, EARNED: 15, UNPAID: null }),
 });
 
 export const LEAVE_TYPES = Object.freeze(['CASUAL', 'SICK', 'EARNED', 'UNPAID']);

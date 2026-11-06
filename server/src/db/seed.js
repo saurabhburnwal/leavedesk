@@ -73,7 +73,7 @@ export function seedDemoData(services, config) {
   leaveService.create(u(rahul), { leaveType: 'EARNED', fromDate: addDays(monday(1), 4), toDate: addDays(monday(1), 4), reason: 'Bank and passport office visit' }, [], ctx);
 
   // 8. Someone on approved leave today (or the next working day).
-  const onLeave = nextWorkingDay(today);
+  const onLeave = nextWorkingDay(today, new Set(services.holidays?.dates() ?? []));
   const todayLeave = leaveService.create(u(ananya), { leaveType: 'CASUAL', fromDate: onLeave, toDate: onLeave, reason: 'Moving to a new apartment' }, [], ctx);
   leaveService.approve(u(rahul), todayLeave.id, { comment: '' }, ctx);
 
@@ -91,9 +91,9 @@ function startOfWeek(iso) {
   return addDays(iso, day === 0 ? -6 : 1 - day);
 }
 
-function nextWorkingDay(iso) {
+function nextWorkingDay(iso, holidays = new Set()) {
   let date = iso;
-  while (isWeekend(parseIsoDate(date))) date = addDays(date, 1);
+  while (isWeekend(parseIsoDate(date)) || holidays.has(date)) date = addDays(date, 1);
   return date;
 }
 

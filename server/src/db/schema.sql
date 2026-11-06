@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS leave_requests (
   leave_type           TEXT    NOT NULL CHECK (leave_type IN ('CASUAL', 'SICK', 'EARNED', 'UNPAID')),
   from_date            TEXT    NOT NULL,                -- ISO date YYYY-MM-DD
   to_date              TEXT    NOT NULL,
-  working_days         INTEGER NOT NULL CHECK (working_days > 0),
+  working_days         REAL    NOT NULL CHECK (working_days > 0),
+  day_part             TEXT    NOT NULL DEFAULT 'FULL' CHECK (day_part IN ('FULL', 'FIRST_HALF', 'SECOND_HALF')),
   reason               TEXT    NOT NULL,
   status               TEXT    NOT NULL CHECK (status IN ('PENDING', 'INFO_REQUESTED', 'APPROVED', 'REJECTED', 'CANCELLED')),
   current_stage        TEXT    CHECK (current_stage IN ('MANAGER', 'HOD')),
@@ -118,6 +119,14 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 -- =====================================================================
 -- [balances & holidays & half-day]. OWNER: Codex. Add tables below.
 -- =====================================================================
+
+CREATE TABLE IF NOT EXISTS holidays (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  holiday_date TEXT NOT NULL UNIQUE,
+  name         TEXT NOT NULL,
+  created_by   INTEGER REFERENCES users(id),
+  created_at   TEXT NOT NULL
+);
 
 
 -- end [balances & holidays & half-day]

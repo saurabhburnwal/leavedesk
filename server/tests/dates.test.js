@@ -11,6 +11,11 @@ test('countWorkingDays skips weekends and is inclusive', () => {
   assert.equal(countWorkingDays('2026-11-04', '2026-11-04'), 1);
 });
 
+test('countWorkingDays skips public holidays too', () => {
+  assert.equal(countWorkingDays('2026-11-02', '2026-11-06', ['2026-11-04']), 4);
+  assert.equal(countWorkingDays('2026-11-04', '2026-11-04', ['2026-11-04']), 0);
+});
+
 test('parseIsoDate rejects impossible dates', () => {
   assert.equal(parseIsoDate('2026-02-30'), null);
   assert.equal(parseIsoDate('2026-13-01'), null);
@@ -26,4 +31,7 @@ test('assessDates enforces the business rules', () => {
   assert.match(assessDates('2026-11-09', '2027-01-30', today).fields.toDate, /at most 60 days/);
   assert.match(assessDates('2026-11-07', '2026-11-08', today).fields.toDate, /weekend/);
   assert.deepEqual(assessDates('2026-11-09', '2026-11-13', today), { fields: {}, workingDays: 5 });
+  assert.equal(assessDates('2026-11-09', '2026-11-13', today, ['2026-11-11']).workingDays, 4);
+  assert.equal(assessDates('2026-11-09', '2026-11-09', today, [], 'FIRST_HALF').workingDays, 0.5);
+  assert.match(assessDates('2026-11-09', '2026-11-10', today, [], 'FIRST_HALF').fields.toDate, /single date/);
 });

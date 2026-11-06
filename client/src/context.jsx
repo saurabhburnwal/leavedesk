@@ -119,6 +119,7 @@ const DEFAULT_POLICY = {
   COMMENT_MAX: 1000,
   MAX_FILES_PER_UPLOAD: 5,
   MAX_FILE_SIZE_MB: 5,
+  YEARLY_ALLOWANCES: { CASUAL: 12, SICK: 10, EARNED: 15, UNPAID: null },
   leaveTypes: ['CASUAL', 'SICK', 'EARNED', 'UNPAID'],
   allowedExtensions: ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'],
 };

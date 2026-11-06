@@ -47,8 +47,9 @@ export function EditLeavePage() {
         subtitle="Saving changes restarts the approval from level 1, so every approver sees the final details."
       />
       <LeaveForm
-        initial={{ leaveType: leave.leaveType, fromDate: leave.fromDate, toDate: leave.toDate, reason: leave.reason }}
+        initial={{ leaveType: leave.leaveType, dayPart: leave.dayPart ?? 'FULL', fromDate: leave.fromDate, toDate: leave.toDate, reason: leave.reason }}
         existingDocumentCount={leave.documents.length}
+        existingLeave={leave}
         submitLabel="Save changes"
         onCancel={() => navigate(`/leaves/${id}`)}
         onSubmit={async (form) => {

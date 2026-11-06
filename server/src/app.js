@@ -5,11 +5,13 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { UserRepository } from './repositories/UserRepository.js';
 import { LeaveRepository } from './repositories/LeaveRepository.js';
+import { HolidayRepository } from './repositories/HolidayRepository.js';
 import { ActionRepository } from './repositories/ActionRepository.js';
 import { DocumentRepository } from './repositories/DocumentRepository.js';
 import { AuditRepository } from './repositories/AuditRepository.js';
 import { AuthService } from './services/AuthService.js';
 import { LeaveService } from './services/LeaveService.js';
+import { HolidayService } from './services/HolidayService.js';
 import { authenticate } from './middleware/auth.js';
 import { createUploader } from './middleware/upload.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -30,6 +32,7 @@ import { ALLOWED_UPLOADS, LEAVE_TYPES, POLICY } from './services/policy.js';
 export function createServices(db, config, { clock } = {}) {
   const users = new UserRepository(db);
   const leaves = new LeaveRepository(db);
+  const holidays = new HolidayRepository(db);
   const actions = new ActionRepository(db);
   const documents = new DocumentRepository(db);
   const audit = new AuditRepository(db);
@@ -39,6 +42,7 @@ export function createServices(db, config, { clock } = {}) {
   return {
     users,
     leaves,
+    holidays,
     actions,
     documents,
     audit,
@@ -53,7 +57,8 @@ export function createServices(db, config, { clock } = {}) {
       sessionHours: config.sessionHours,
     }),
     teamService: new TeamService({ db, users, audit }),
-    leaveService: new LeaveService({ db, users, leaves, actions, documents, audit, notifier: notifications, clock }),
+    leaveService: new LeaveService({ db, users, leaves, holidays, actions, documents, audit, notifier: notifications, clock }),
+    holidayService: new HolidayService({ db, holidays, audit }),
   };
 }
 
@@ -87,7 +92,7 @@ export function createApp({ db, config, services = createServices(db, config) })
   api.use(leaveRoutes({ leaveService: services.leaveService, upload: createUploader(config.uploadDir), uploadDir: config.uploadDir }));
   api.use(auditRoutes({ audit: services.audit }));
   api.use(notificationRoutes({ db, services })); // Copilot
-  api.use(holidayRoutes({ db, services })); // Codex
+  api.use(holidayRoutes({ holidayService: services.holidayService })); // Codex
   api.use(userRoutes({ db, services, config })); // Claude
   app.use('/api', api);
 

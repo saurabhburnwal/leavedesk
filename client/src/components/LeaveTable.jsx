@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { LeaveTypeTag, StatusBadge, Avatar } from './ui.jsx';
-import { formatRange, pluralize, timeAgo } from '../utils.js';
+import { formatLeaveDays, formatRange, timeAgo } from '../utils.js';
 
 /**
  * Responsive list of leave requests: a table on desktop, stacked cards on phones
@@ -47,7 +47,7 @@ export function LeaveTable({ items, showEmployee = false, compact = false }) {
                 <LeaveTypeTag type={leave.leaveType} short />
               </td>
               <td data-label="Working days">
-                <span className="days">{pluralize(leave.workingDays, 'day')}</span>
+                <span className="days">{formatLeaveDays(leave)}</span>
                 {leave.requiresDocuments && (
                   <span className="flag" title="More than 3 working days: documents + Manager and HOD approval">
                     2-level
