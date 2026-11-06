@@ -37,7 +37,16 @@ export function LeaveDetailPage() {
           </span>
         }
         subtitle={isOwner ? `Submitted ${formatDateTime(leave.createdAt)}` : `${leave.employeeName} · ${leave.department}`}
-        actions={isOwner && <OwnerActions leave={leave} onChange={update} />}
+        actions={
+          <>
+            {leave.status === 'APPROVED' && (
+              <a className="btn btn-secondary" href={`/api/leaves/${leave.id}/calendar.ics`} title="Download an .ics file for Google, Outlook or Apple Calendar">
+                📅 Add to calendar
+              </a>
+            )}
+            {isOwner && <OwnerActions leave={leave} onChange={update} />}
+          </>
+        }
       />
 
       {leave.status === 'INFO_REQUESTED' && leave.infoRequest && (

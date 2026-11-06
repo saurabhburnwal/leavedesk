@@ -96,6 +96,7 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 | Leave balances *(extra)* | Yearly allowance per type (Casual 12, Sick 10, Earned 15, Unpaid unlimited). "N days left" on the form, balance cards on the dashboard, the employee's balance shown to approvers; over-balance requests are blocked |
 | Public holidays *(extra)* | Holidays are excluded from working days (server and live form count). HOD adds/removes them on the **Holidays** page (audited) |
 | Half-day leave *(extra)* | Single-day requests can be Full day / First half / Second half (0.5 day); the two halves of one date can coexist |
+| Add to calendar *(extra)* | Approved leave downloads as an `.ics` file for Google / Outlook / Apple Calendar |
 | In-app notifications *(extra)* | Bell with unread count: approvers hear about new requests and replies; employees about approvals, rejections (with the reason) and info requests |
 | CRUD | **C**reate request · **R**ead list/detail · **U**pdate (edit while pending; restarts approval) · **D**elete as a soft delete (*Cancel*, kept for audit) |
 
@@ -207,6 +208,7 @@ All endpoints are under `/api` and return JSON. Errors are always `{ "error": { 
 | GET | `/documents/:id[?download=1]` | involved users | View / download a file |
 | GET | `/audit-logs?action=&offset=` | HOD | Department audit trail |
 | GET | `/audit-logs/verify` | HOD | Recompute the audit hash chain (integrity check) |
+| GET | `/leaves/:id/calendar.ics` | involved users | Approved leave as an iCalendar file |
 | GET | `/auth/register-options` | public | Departments and managers for the sign-up form |
 | POST | `/auth/register` | public | Create an Employee account and send a verification code |
 | POST | `/auth/verify` | public | Confirm the 6-digit code (signs the user in) |
@@ -253,7 +255,9 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 npm test
 ```
 
-33 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability and tamper detection, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
+34 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability and tamper detection, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the tests and the UI build on every push and pull request.
 
 ## 8. Configuration
 
