@@ -23,9 +23,30 @@ export function authRoutes({ authService, audit, config }) {
     path: '/',
   };
 
+  const setSession = (res, token) => res.cookie(SESSION_COOKIE, token, { ...cookieOptions, maxAge: config.sessionHours * 60 * 60 * 1000 });
+
   router.post('/login', loginLimiter, async (req, res) => {
     const { user, token } = await authService.login(req.body, { ip: req.ip });
-    res.cookie(SESSION_COOKIE, token, { ...cookieOptions, maxAge: config.sessionHours * 60 * 60 * 1000 });
+    setSession(res, token);
+    res.json({ user });
+  });
+
+  // ---- Self sign-up with email verification ----
+  router.get('/register-options', (_req, res) => {
+    res.json(authService.registrationOptions());
+  });
+
+  router.post('/register', loginLimiter, async (req, res) => {
+    res.status(201).json(await authService.register(req.body, { ip: req.ip }));
+  });
+
+  router.post('/resend-code', loginLimiter, async (req, res) => {
+    res.json(await authService.resendCode(req.body, { ip: req.ip }));
+  });
+
+  router.post('/verify', loginLimiter, (req, res) => {
+    const { user, token } = authService.verifyEmail(req.body, { ip: req.ip });
+    setSession(res, token);
     res.json({ user });
   });
 

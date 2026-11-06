@@ -41,6 +41,13 @@ Open **http://localhost:3000**. On the first run the script installs dependencie
 
 ---
 
+### Sign-up and email verification (optional email setup)
+
+New users can **Create an account** from the login page. Everyone registers as an **Employee** and picks their department and reporting manager. The account must be verified with a **6-digit code** (hashed in the DB, valid for 10 minutes, at most 5 attempts, 30 s resend cooldown) before it can sign in. The HOD can later promote people to Manager on the **Team** page.
+
+* **Without configuration (default, "demo mode"):** the code is shown on screen and printed in the server console, so assessors can test sign-up with zero setup.
+* **With real email:** copy `.env.example` to `.env` and set `RESEND_API_KEY` (from https://resend.com). With Resend's test sender `onboarding@resend.dev`, mail only reaches your own Resend account email. To email anyone, verify a domain in Resend and set `EMAIL_FROM="LeaveDesk <noreply@yourdomain.com>"`.
+
 ## 2. Demo accounts
 
 All passwords: **`Password@123`**. The login page also has one-click demo buttons.
@@ -190,6 +197,12 @@ All endpoints are under `/api` and return JSON. Errors are always `{ "error": { 
 | POST | `/leaves/:id/request-info` | current approver | Ask for more info (`comment` required) |
 | GET | `/documents/:id[?download=1]` | involved users | View / download a file |
 | GET | `/audit-logs?action=&offset=` | HOD | Department audit trail |
+| GET | `/auth/register-options` | public | Departments and managers for the sign-up form |
+| POST | `/auth/register` | public | Create an Employee account and send a verification code |
+| POST | `/auth/verify` | public | Confirm the 6-digit code (signs the user in) |
+| POST | `/auth/resend-code` | public | Send a new code (30 s cooldown) |
+| GET | `/users/team` | HOD | Department members, roles and reporting lines |
+| PATCH | `/users/:id` | HOD | Promote/demote (Employee ↔ Manager) and change reporting manager |
 
 Example, using the payload from the assignment:
 
@@ -236,6 +249,10 @@ npm test
 | `SESSION_HOURS` | `8` | Session length |
 | `COOKIE_SECURE` | `false` | Set `true` when served over HTTPS |
 | `SEED_DEMO_DATA` | `true` | Load demo users/requests into an empty database |
+| `RESEND_API_KEY` | *(empty = demo mode)* | Send verification codes by email through Resend |
+| `EMAIL_FROM` | `LeaveDesk <onboarding@resend.dev>` | Sender address (must be on a domain verified in Resend) |
+
+Variables can also go in a `.env` file in the project root (see `.env.example`).
 
 ## 9. Trade-offs and next steps
 

@@ -85,6 +85,11 @@ export function AuthProvider({ children }) {
         setUser(signedIn);
         return signedIn;
       },
+      /** Used after email verification, which signs the user in on the server. */
+      completeSignIn(signedIn) {
+        setSignedOut(false);
+        setUser(signedIn);
+      },
       async logout() {
         try {
           await Api.logout();

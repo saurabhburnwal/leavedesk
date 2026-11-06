@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { PasswordInput } from '../components/PasswordInput.jsx';
 import { useAuth, useToast } from '../context.jsx';
 import { Field } from '../components/ui.jsx';
 
@@ -40,6 +41,11 @@ export function LoginPage() {
       toast.success(`Welcome back, ${signedIn.name.split(' ')[0]}!`);
       navigate(location.state?.from ?? '/', { replace: true });
     } catch (err) {
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        toast.info(err.message);
+        navigate(`/verify?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+        return;
+      }
       setErrors(err.fields ?? {});
       setFormError(err.message);
     } finally {
@@ -90,9 +96,8 @@ export function LoginPage() {
             />
           </Field>
           <Field label="Password" htmlFor="password" error={errors.password}>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -102,6 +107,9 @@ export function LoginPage() {
           <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
+          <p className="center-text small">
+            New here? <Link to="/register">Create an account</Link>
+          </p>
         </form>
 
         <div className="card demo-card">

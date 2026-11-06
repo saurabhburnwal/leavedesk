@@ -20,6 +20,9 @@ import { notificationRoutes } from './routes/notificationRoutes.js';
 import { holidayRoutes } from './routes/holidayRoutes.js';
 import { userRoutes } from './routes/userRoutes.js';
 import { NotificationService } from './services/NotificationService.js';
+import { NotificationRepository } from './repositories/NotificationRepository.js';
+import { EmailService } from './services/emailService.js';
+import { TeamService } from './services/TeamService.js';
 import { AppError } from './utils/errors.js';
 import { ALLOWED_UPLOADS, LEAVE_TYPES, POLICY } from './services/policy.js';
 
@@ -30,7 +33,8 @@ export function createServices(db, config, { clock } = {}) {
   const actions = new ActionRepository(db);
   const documents = new DocumentRepository(db);
   const audit = new AuditRepository(db);
-  const notifications = new NotificationService({ db });
+  const notificationRepository = new NotificationRepository(db);
+  const notifications = new NotificationService({ repository: notificationRepository });
 
   return {
     users,
@@ -39,7 +43,16 @@ export function createServices(db, config, { clock } = {}) {
     documents,
     audit,
     notifications,
-    authService: new AuthService({ users, audit, jwtSecret: config.jwtSecret, sessionHours: config.sessionHours }),
+    notificationRepository,
+    authService: new AuthService({
+      db,
+      users,
+      audit,
+      email: new EmailService({ apiKey: config.resendApiKey, from: config.emailFrom }),
+      jwtSecret: config.jwtSecret,
+      sessionHours: config.sessionHours,
+    }),
+    teamService: new TeamService({ db, users, audit }),
     leaveService: new LeaveService({ db, users, leaves, actions, documents, audit, notifier: notifications, clock }),
   };
 }

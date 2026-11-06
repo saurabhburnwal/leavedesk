@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   role           TEXT    NOT NULL CHECK (role IN ('EMPLOYEE', 'MANAGER', 'HOD')),
   department_id  INTEGER NOT NULL REFERENCES departments(id),
   manager_id     INTEGER REFERENCES users(id),          -- reporting manager (NULL for HOD)
+  email_verified_at TEXT,                               -- NULL until the email code is confirmed
   created_at     TEXT    NOT NULL
 );
 
@@ -101,6 +102,15 @@ END;
 -- [auth] sign-up + email verification. OWNER: Claude. Add tables below.
 -- =====================================================================
 
+-- One active 6-digit code per unverified user. Only a hash of the code is stored.
+CREATE TABLE IF NOT EXISTS email_verifications (
+  user_id       INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  code_hash     TEXT    NOT NULL,
+  expires_at    TEXT    NOT NULL,
+  attempts      INTEGER NOT NULL DEFAULT 0,
+  last_sent_at  TEXT    NOT NULL
+);
+
 
 -- end [auth]
 
@@ -117,5 +127,17 @@ END;
 -- [notifications]. OWNER: Copilot. Add tables below.
 -- =====================================================================
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  leave_id   INTEGER REFERENCES leave_requests(id) ON DELETE CASCADE,
+  type       TEXT    NOT NULL,
+  title      TEXT    NOT NULL,
+  message    TEXT    NOT NULL,
+  is_read    INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
+  created_at TEXT    NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
 
 -- end [notifications]
