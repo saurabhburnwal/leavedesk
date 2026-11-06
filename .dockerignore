@@ -4,3 +4,6 @@ client/dist
 data
 .git
 *.log
+.env
+.env.*
+!.env.example

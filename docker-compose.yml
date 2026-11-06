@@ -9,6 +9,10 @@ services:
       # Optional: set your own secret; otherwise one is generated and stored in the volume.
       # JWT_SECRET: change-me
       SEED_DEMO_DATA: "true"
+      # Real verification emails: put these in a .env file next to this file (docker compose reads it).
+      # Leave RESEND_API_KEY empty for demo mode (code shown on screen).
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-LeaveDesk <onboarding@resend.dev>}
     volumes:
       - leave-data:/app/data
     restart: unless-stopped
