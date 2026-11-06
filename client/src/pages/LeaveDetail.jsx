@@ -5,6 +5,7 @@ import { useApi, useAuth, usePolicy, useToast } from '../context.jsx';
 import { Avatar, ErrorState, Field, LeaveTypeTag, Modal, PageHeader, Spinner, StatusBadge } from '../components/ui.jsx';
 import { ApprovalProgress, DocumentList, Timeline } from '../components/LeaveDetailParts.jsx';
 import { FileInput } from '../components/FileInput.jsx';
+import { AiInsight } from '../components/AiAssistants.jsx';
 import { formatDate, formatDateTime, formatLeaveDays, isApproverRole, pluralize, STAGE_LABEL } from '../utils.js';
 
 export function LeaveDetailPage() {
@@ -206,6 +207,7 @@ function DecisionPanel({ leave, onDone }) {
             : `Review the ${pluralize(leave.documents.length, 'attached document')} below before deciding.`}
         </p>
       )}
+      <AiInsight leaveId={leave.id} />
       <Field label="Comment" htmlFor="decision-comment" error={error} hint="Required when rejecting or asking for information. Visible to the employee.">
         <textarea
           id="decision-comment"

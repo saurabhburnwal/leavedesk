@@ -27,6 +27,8 @@ import { NotificationService } from './services/NotificationService.js';
 import { NotificationRepository } from './repositories/NotificationRepository.js';
 import { EmailService } from './services/emailService.js';
 import { TeamService } from './services/TeamService.js';
+import { AiService } from './services/AiService.js';
+import { aiRoutes } from './routes/aiRoutes.js';
 import { AppError } from './utils/errors.js';
 import { ALLOWED_UPLOADS, LEAVE_TYPES, POLICY } from './services/policy.js';
 
@@ -41,7 +43,7 @@ export function createServices(db, config, { clock } = {}) {
   const notificationRepository = new NotificationRepository(db);
   const notifications = new NotificationService({ repository: notificationRepository });
 
-  return {
+  const services = {
     users,
     leaves,
     holidays,
@@ -62,6 +64,16 @@ export function createServices(db, config, { clock } = {}) {
     leaveService: new LeaveService({ db, users, leaves, holidays, actions, documents, audit, notifier: notifications, clock }),
     holidayService: new HolidayService({ db, holidays, audit }),
   };
+  services.aiService = new AiService({
+    apiKey: config.groqApiKey,
+    model: config.groqModel,
+    audit,
+    leaveService: services.leaveService,
+    leaves,
+    holidays,
+    clock,
+  });
+  return services;
 }
 
 export function createApp({ db, config, services = createServices(db, config) }) {
@@ -106,6 +118,7 @@ export function createApp({ db, config, services = createServices(db, config) })
   api.use(holidayRoutes({ holidayService: services.holidayService })); // Codex
   api.use(userRoutes({ db, services, config })); // Claude
   api.use(calendarRoutes({ services }));
+  api.use(aiRoutes({ services, config }));
   app.use('/api', api);
 
   app.use('/api', (req) => {

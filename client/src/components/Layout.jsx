@@ -6,6 +6,7 @@ import { ROLE_LABEL, isApproverRole } from '../utils.js';
 import { Avatar } from './ui.jsx';
 import { NotificationBell } from './NotificationBell.jsx'; // Copilot
 import { applyTheme, effectiveTheme } from '../theme.js';
+import { PolicyAssistant } from './AiAssistants.jsx';
 
 /** Small line icons (inline SVG, no icon library needed). */
 const ICONS = {
@@ -154,6 +155,7 @@ export function Layout() {
         <main id="main" className="container">
           <Outlet />
         </main>
+        <PolicyAssistant />
       </div>
     </div>
   );

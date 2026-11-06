@@ -35,6 +35,8 @@ export function loadConfig(overrides = {}) {
     trustProxy: process.env.TRUST_PROXY ? Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY : false,
     seedDemoData: process.env.SEED_DEMO_DATA !== 'false',
     resendApiKey: process.env.RESEND_API_KEY || null,
+    groqApiKey: process.env.GROQ_API_KEY || null,
+    groqModel: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
     emailFrom: process.env.EMAIL_FROM || 'LeaveDesk <onboarding@resend.dev>',
     ...overrides,
   };

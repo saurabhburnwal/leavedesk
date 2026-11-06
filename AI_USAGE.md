@@ -35,10 +35,16 @@ I built this project with four AI coding agents working **in parallel**, the way
 
 ## Responsible AI
 
-* **No AI in the decision path.** Leave approvals are always made by people. The running app has no LLM dependency and needs no API keys.
+* **No AI in the decision path.** Leave approvals are always made by people. The app needs no API keys; the optional AI assistant switches itself off without one.
 * **No real personal data** was shared with AI tools; all demo data is synthetic (`example.com`).
 * **No secrets in the repo.** `.env` is git-ignored and the JWT secret is generated on first run.
-* **Planned AI features** would follow the same rules. Examples: a policy Q&A assistant (RAG over the leave policy plus the user's own balance) and natural-language leave requests ("next Mon–Wed for my sister's wedding" pre-fills the form). The AI only suggests and a human confirms; AI output is labelled; every AI call is written to the audit log; and the app keeps working without a key.
+* **AI inside the product (Groq) follows the same rules.** The three features are the plain-English leave request, the RAG policy assistant and the approver insight, and none of them makes decisions:
+  * AI output is labelled.
+  * It is validated with zod and re-checked by the normal leave rules.
+  * Every AI call is audit-logged (metadata only) and rate-limited per user.
+  * The facts an approver sees are computed in code; the model only phrases them.
+  * The app works fully without a key.
+* **Found in testing:** the first policy prompt let the model subtract used days twice ("2 sick days left" instead of 6). I fixed it by labelling the balance data unambiguously, and this is why the answers cite their sources.
 
 ## Example delegation prompt
 

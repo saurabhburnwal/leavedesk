@@ -1,17 +1,24 @@
+import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Api } from '../api.js';
 import { useApi, useToast } from '../context.jsx';
 import { LeaveForm } from '../components/LeaveForm.jsx';
+import { AiLeaveAssistant } from '../components/AiAssistants.jsx';
 import { ErrorState, PageHeader, Spinner } from '../components/ui.jsx';
 
 export function ApplyLeavePage() {
   const navigate = useNavigate();
   const toast = useToast();
+  // AI suggestions re-mount the form with new initial values (the user still reviews and submits).
+  const [aiFill, setAiFill] = useState({ key: 0, values: undefined });
 
   return (
     <>
       <PageHeader title="Apply for leave" subtitle="Weekends are not counted. Leave of more than 3 working days needs a document and HOD approval." />
+      <AiLeaveAssistant onSuggestion={(v) => setAiFill((f) => ({ key: f.key + 1, values: v }))} />
       <LeaveForm
+        key={aiFill.key}
+        initial={aiFill.values}
         submitLabel="Submit request"
         onCancel={() => navigate(-1)}
         onSubmit={async (form) => {

@@ -15,4 +15,7 @@ services:
         value: "true"
       - key: JWT_SECRET
         generateValue: true
+      # Set in the Render dashboard (never commit keys). Unset = AI features hidden.
+      - key: GROQ_API_KEY
+        sync: false
       # Leave RESEND_API_KEY unset for demo mode (verification code shown on screen).

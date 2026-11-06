@@ -100,6 +100,7 @@ All passwords: **`Password@123`**. The login page also has one-click demo button
 | Public holidays *(extra)* | Holidays are excluded from working days (server and live form count). HOD adds/removes them on the **Holidays** page (audited) |
 | Half-day leave *(extra)* | Single-day requests can be Full day / First half / Second half (0.5 day); the two halves of one date can coexist |
 | Add to calendar *(extra)* | Approved leave downloads as an `.ics` file for Google / Outlook / Apple Calendar |
+| **AI assistant (GenAI, optional)** *(extra)* | Uses Groq (`openai/gpt-oss-120b`). **1. Plain-English leave request:** "Need next Mon–Wed off for my sister's wedding" pre-fills the form for review. **2. Policy assistant (RAG):** a floating chat answers rule/balance questions from a policy document plus the user's live balance, citing sections. **3. Approver insight:** a neutral summary of balance, overlapping team leave and patterns (facts computed in code; AI only words them). Hidden when no `GROQ_API_KEY` is set |
 | In-app notifications *(extra)* | Bell with unread count: approvers hear about new requests and replies; employees about approvals, rejections (with the reason) and info requests |
 | CRUD | **C**reate request · **R**ead list/detail · **U**pdate (edit while pending; restarts approval) · **D**elete as a soft delete (*Cancel*, kept for audit) |
 
@@ -212,6 +213,10 @@ All endpoints are under `/api` and return JSON. Errors are always `{ "error": { 
 | GET | `/audit-logs?action=&offset=` | HOD | Department audit trail |
 | GET | `/audit-logs/verify` | HOD | Recompute the audit hash chain (integrity check) |
 | GET | `/leaves/:id/calendar.ics` | involved users | Approved leave as an iCalendar file |
+| GET | `/ai/status` | signed in | Whether AI features are enabled |
+| POST | `/ai/leave-suggestion` | signed in | `{ text }` → suggested form values (never submitted automatically) |
+| POST | `/ai/ask` | signed in | `{ text }` → policy answer + cited sections (RAG) |
+| GET | `/leaves/:id/ai-insight` | approvers | Advisory summary of a request |
 | GET | `/auth/register-options` | public | Departments and managers for the sign-up form |
 | POST | `/auth/register` | public | Create an Employee account and send a verification code |
 | POST | `/auth/verify` | public | Confirm the 6-digit code (signs the user in) |
@@ -241,6 +246,14 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 
 ---
 
+### How the AI works (and its guardrails)
+
+* **Human in the loop:** the AI only *suggests*. Forms are pre-filled for review and never submitted; insights say "advisory only, you decide".
+* **Retrieval-augmented answers:** `server/src/ai/leave-policy.md` is split into sections, ranked by keyword overlap with the question (simple and explainable; a vector store would replace it for a large knowledge base), and only the top sections plus the user's live balance go into the prompt. Cited sources are checked against real section titles.
+* **Untrusted output:** the model must return JSON, which is validated with zod like any user input, then checked again by the normal leave rules.
+* **Prompt-injection resistant:** user text is passed as data, the system prompt says so, and the model can't take actions. Approver facts (balance, overlaps, patterns) are computed in code; the model only words them.
+* **Privacy and cost:** the key stays on the server; AI calls are rate-limited per user (30 per 10 min) and recorded in the audit log (metadata only, not the text); nothing breaks without a key.
+
 ## 6. Security
 
 * Passwords hashed with **bcrypt**; the login response takes the same time whether or not the email exists (no user enumeration).
@@ -258,7 +271,7 @@ curl -b jar -X POST localhost:3000/api/leaves -F fromDate=2026-11-16 -F toDate=2
 npm test
 ```
 
-34 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability and tamper detection, sign-up/verification, team management, leave balances, holidays, half-day leave and notifications.
+39 tests (Node's built-in test runner + supertest, in-memory DB, fixed clock) cover: working-day counting (weekends + holidays), date rules, the short and long approval flows, the document requirement, HOD-can't-skip-manager, cross-department isolation, reject-needs-comment, the info-request round trip, edit-restarts-chain, cancel permissions, RBAC, upload type checks, audit-log immutability and tamper detection, sign-up/verification, team management, leave balances, holidays, half-day leave, notifications, calendar export and the AI service (with a fake model, so tests need no key or network).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the tests and the UI build on every push and pull request.
 
@@ -272,6 +285,8 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the tests and the UI build on e
 | `SESSION_HOURS` | `8` | Session length |
 | `COOKIE_SECURE` | `false` | Set `true` when served over HTTPS |
 | `SEED_DEMO_DATA` | `true` | Load demo users/requests into an empty database |
+| `GROQ_API_KEY` | *(empty = AI hidden)* | Enables the AI assistant (free key at console.groq.com) |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Groq model to use |
 | `TRUST_PROXY` | *(off)* | Set to `1` behind a hosting proxy (Render, Nginx) so client IPs are correct for the audit log and rate limit |
 | `RESEND_API_KEY` | *(empty = demo mode)* | Send verification codes by email through Resend |
 | `EMAIL_FROM` | `LeaveDesk <onboarding@resend.dev>` | Sender address (must be on a domain verified in Resend) |
