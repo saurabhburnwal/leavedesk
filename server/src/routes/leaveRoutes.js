@@ -20,6 +20,10 @@ export function leaveRoutes({ leaveService, upload, uploadDir }) {
     res.json({ items: leaveService.listMine(req.user, { status: req.query.status }) });
   });
 
+  router.get('/leaves/balances', (req, res) => {
+    res.json({ balances: leaveService.getBalances(req.user.id) });
+  });
+
   router.post('/leaves', upload, (req, res) => {
     const leave = leaveService.create(req.user, req.body, files(req), ctx(req));
     res.status(201).location(`/api/leaves/${leave.id}`).json({ leave });

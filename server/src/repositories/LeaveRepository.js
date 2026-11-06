@@ -30,6 +30,7 @@ function toLeave(row) {
     fromDate: row.from_date,
     toDate: row.to_date,
     workingDays: row.working_days,
+    dayPart: row.day_part ?? 'FULL',
     reason: row.reason,
     status: row.status,
     currentStage: row.current_stage,
@@ -91,14 +92,16 @@ export class LeaveRepository {
   }
 
   /** Active requests of the employee whose date range intersects [fromDate, toDate]. */
-  findOverlapping(employeeId, fromDate, toDate, excludeId = null) {
+  findOverlapping(employeeId, fromDate, toDate, excludeId = null, dayPart = 'FULL') {
     const sql = `${SELECT_LEAVE}
       WHERE lr.employee_id = ?
         AND lr.status IN ('PENDING', 'INFO_REQUESTED', 'APPROVED')
         AND lr.from_date <= ? AND lr.to_date >= ?
         AND lr.id <> ?
+        AND NOT (lr.from_date = ? AND lr.to_date = ? AND ? <> 'FULL'
+                 AND lr.day_part IN ('FIRST_HALF', 'SECOND_HALF') AND lr.day_part <> ?)
       ORDER BY lr.from_date LIMIT 1`;
-    return toLeave(this.db.prepare(sql).get(employeeId, toDate, fromDate, excludeId ?? -1));
+    return toLeave(this.db.prepare(sql).get(employeeId, toDate, fromDate, excludeId ?? -1, fromDate, toDate, dayPart, dayPart));
   }
 
   create(leave) {
@@ -106,9 +109,9 @@ export class LeaveRepository {
     const result = this.db
       .prepare(
         `INSERT INTO leave_requests
-           (employee_id, leave_type, from_date, to_date, working_days, reason, status, current_stage,
+           (employee_id, leave_type, from_date, to_date, working_days, day_part, reason, status, current_stage,
             requires_documents, manager_approver_id, hod_approver_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         leave.employeeId,
@@ -116,6 +119,7 @@ export class LeaveRepository {
         leave.fromDate,
         leave.toDate,
         leave.workingDays,
+        leave.dayPart ?? 'FULL',
         leave.reason,
         leave.status,
         leave.currentStage,
@@ -133,7 +137,7 @@ export class LeaveRepository {
     const result = this.db
       .prepare(
         `UPDATE leave_requests
-           SET leave_type = ?, from_date = ?, to_date = ?, working_days = ?, reason = ?, status = ?,
+           SET leave_type = ?, from_date = ?, to_date = ?, working_days = ?, day_part = ?, reason = ?, status = ?,
                current_stage = ?, requires_documents = ?, manager_approver_id = ?, hod_approver_id = ?, updated_at = ?
          WHERE id = ? AND status = ?`,
       )
@@ -142,6 +146,7 @@ export class LeaveRepository {
         leave.fromDate,
         leave.toDate,
         leave.workingDays,
+        leave.dayPart ?? 'FULL',
         leave.reason,
         leave.status,
         leave.currentStage,
@@ -188,6 +193,13 @@ export class LeaveRepository {
          WHERE employee_id = ? AND status = 'APPROVED' AND substr(from_date, 1, 4) = ?`,
       )
       .get(employeeId, String(year)).n;
+  }
+
+  leaveDaysForBalance(employeeId, year) {
+    return this.db.prepare(`SELECT leave_type, from_date, to_date, working_days, day_part, status
+      FROM leave_requests WHERE employee_id = ? AND status IN ('APPROVED', 'PENDING', 'INFO_REQUESTED')
+        AND substr(from_date, 1, 4) <= ? AND substr(to_date, 1, 4) >= ?`)
+      .all(employeeId, String(year), String(year));
   }
 
   /** Approved leave of people this approver can see, overlapping [fromDate, toDate]. */

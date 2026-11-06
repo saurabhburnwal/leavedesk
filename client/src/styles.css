@@ -420,3 +420,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--f
 .demo-account { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; text-align: left; font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
 .demo-account:hover:not(:disabled) { border-color: var(--primary); }
 .demo-name { font-weight: 700; }
+/* ===== balances, holidays & half-day (Codex) ===== */
+.balance-chip { display: block; margin-top: 3px; font-size: .68rem; font-weight: 600; opacity: .85; white-space: nowrap; }
+.segment { text-align: center; }
+.holiday-form { margin-bottom: 18px; }
+.holiday-list { list-style: none; padding: 0; margin: 0; }
+.holiday-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--border); }
+.holiday-list li:last-child { border-bottom: 0; }
+.holiday-list li > div { display: flex; flex-direction: column; gap: 4px; }
+.holiday-past { opacity: .55; }
+.employee-balances { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; }
+.employee-balances p { margin: 7px 0; font-size: .85rem; }
+@media (max-width: 480px) { .holiday-list li { align-items: flex-start; } .balance-chip { white-space: normal; } }

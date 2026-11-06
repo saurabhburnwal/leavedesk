@@ -1,17 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../api.js';
 import { useAuth, usePolicy, useToast } from '../context.jsx';
 import { LEAVE_TYPE_META, addDays, countWorkingDays, daysBetween, formatRange, parseIsoDate, pluralize, todayIso } from '../utils.js';
+import { listHolidays } from '../api/holidays.js';
+import { getLeaveBalances } from '../api/leavePolicy.js';
 import { Field } from './ui.jsx';
 import { FileInput } from './FileInput.jsx';
 
-const EMPTY = { leaveType: 'CASUAL', fromDate: '', toDate: '', reason: '' };
+const EMPTY = { leaveType: 'CASUAL', dayPart: 'FULL', fromDate: '', toDate: '', reason: '' };
 
 /**
  * Shared form for applying and editing. Validates as the user types (after a
  * field is touched), shows working days live and explains the approval route.
  */
-export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, submitLabel, onSubmit, onCancel }) {
+export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, existingLeave = null, submitLabel, onSubmit, onCancel }) {
   const policy = usePolicy();
   const { user } = useAuth();
   const toast = useToast();
@@ -20,18 +22,30 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, submitLa
   const [touched, setTouched] = useState({});
   const [serverErrors, setServerErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [holidays, setHolidays] = useState([]);
+  const [balances, setBalances] = useState(null);
+
+  useEffect(() => {
+    listHolidays().then(setHolidays).catch(() => {});
+    getLeaveBalances().then(setBalances).catch(() => {});
+  }, []);
 
   const today = todayIso();
   const minDate = addDays(today, -policy.MAX_BACKDATE_DAYS);
   const maxDate = addDays(today, policy.MAX_ADVANCE_DAYS);
 
-  const workingDays = countWorkingDays(values.fromDate, values.toDate);
+  const fullWorkingDays = countWorkingDays(values.fromDate, values.toDate, holidays.map((h) => h.date));
+  const workingDays = values.dayPart === 'FULL' ? fullWorkingDays : fullWorkingDays > 0 && values.fromDate === values.toDate ? 0.5 : 0;
   const isLong = workingDays > policy.LONG_LEAVE_THRESHOLD_DAYS;
   const totalDocs = existingDocumentCount + files.length;
+  const currentTypeBalance = balances?.byType?.[values.leaveType];
+  const balanceCredit = existingLeave && existingLeave.leaveType === values.leaveType && existingLeave.status !== 'APPROVED'
+    && existingLeave.fromDate.slice(0, 4) === values.fromDate.slice(0, 4) ? existingLeave.workingDays : 0;
+  const effectiveAvailable = currentTypeBalance?.available === null ? null : (currentTypeBalance ? currentTypeBalance.available + balanceCredit : null);
 
   const errors = useMemo(
-    () => validate(values, { policy, workingDays, isLong, totalDocs, minDate, maxDate }),
-    [values, policy, workingDays, isLong, totalDocs, minDate, maxDate],
+    () => validate(values, { policy, workingDays, isLong, totalDocs, minDate, maxDate, effectiveAvailable }),
+    [values, policy, workingDays, isLong, totalDocs, minDate, maxDate, effectiveAvailable],
   );
 
   const set = (name) => (e) => {
@@ -86,10 +100,19 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, submitLa
               {policy.leaveTypes.map((type) => (
                 <label key={type} className={`segment type-${type.toLowerCase()} ${values.leaveType === type ? 'active' : ''}`}>
                   <input type="radio" name="leaveType" value={type} checked={values.leaveType === type} onChange={set('leaveType')} />
-                  {LEAVE_TYPE_META[type]?.short ?? type}
+                  <span>{LEAVE_TYPE_META[type]?.short ?? type}</span>
+                  {balances?.byType?.[type] && <small className="balance-chip">{balances.byType[type].available === null ? 'Unlimited' : `${balances.byType[type].available} days left`}</small>}
                 </label>
               ))}
             </div>
+          </Field>
+
+          <Field label="Part of day" htmlFor="dayPart" error={errorFor('dayPart')}>
+            <select id="dayPart" value={values.dayPart} onChange={set('dayPart')}>
+              <option value="FULL">Full day</option>
+              <option value="FIRST_HALF">First half</option>
+              <option value="SECOND_HALF">Second half</option>
+            </select>
           </Field>
 
           <div className="row-2">
@@ -155,9 +178,9 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, submitLa
           {workingDays > 0 ? (
             <>
               <p className="summary-days">
-                <span className="big">{workingDays}</span> working {workingDays === 1 ? 'day' : 'days'}
+                <span className="big">{workingDays}</span> {workingDays === 0.5 ? `day · ${values.dayPart === 'FIRST_HALF' ? 'first half' : 'second half'}` : `working ${workingDays === 1 ? 'day' : 'days'}`}
               </p>
-              <p className="muted small">{formatRange(values.fromDate, values.toDate)} · weekends excluded</p>
+              <p className="muted small">{formatRange(values.fromDate, values.toDate)} · weekends and public holidays excluded</p>
             </>
           ) : (
             <p className="muted">Pick your dates to see how many working days this covers.</p>
@@ -207,7 +230,7 @@ export function LeaveForm({ initial = EMPTY, existingDocumentCount = 0, submitLa
 }
 
 /** Client-side validation mirrors the server rules for instant feedback. */
-function validate(values, { policy, workingDays, isLong, totalDocs, minDate, maxDate }) {
+function validate(values, { policy, workingDays, isLong, totalDocs, minDate, maxDate, effectiveAvailable }) {
   const errors = {};
   if (!policy.leaveTypes.includes(values.leaveType)) errors.leaveType = 'Please choose a leave type.';
 
@@ -223,7 +246,8 @@ function validate(values, { policy, workingDays, isLong, totalDocs, minDate, max
   else if (values.toDate > maxDate) errors.toDate = 'You can plan leave up to one year in advance.';
   else if (from && daysBetween(values.fromDate, values.toDate) + 1 > policy.MAX_SPAN_CALENDAR_DAYS)
     errors.toDate = `A single request can cover at most ${policy.MAX_SPAN_CALENDAR_DAYS} days.`;
-  else if (from && workingDays === 0) errors.toDate = 'These dates fall entirely on a weekend, so no leave is needed.';
+  else if (from && values.dayPart !== 'FULL' && values.fromDate !== values.toDate) errors.toDate = 'Half-day leave can only be requested for a single date.';
+  else if (from && workingDays === 0) errors.toDate = 'These dates fall entirely on weekends or public holidays, so no leave is needed.';
 
   const reason = values.reason.trim();
   if (!reason) errors.reason = 'Please tell us the reason for your leave.';
@@ -231,6 +255,9 @@ function validate(values, { policy, workingDays, isLong, totalDocs, minDate, max
 
   if (isLong && totalDocs === 0) {
     errors.documents = `This leave is ${workingDays} working days. Please attach a supporting document (e.g. medical certificate or travel booking).`;
+  }
+  if (effectiveAvailable !== null && effectiveAvailable !== undefined && workingDays > effectiveAvailable) {
+    errors.leaveType = `Only ${effectiveAvailable} ${values.leaveType.toLowerCase()} leave days are available this year.`;
   }
   return errors;
 }

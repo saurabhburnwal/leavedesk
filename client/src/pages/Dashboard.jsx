@@ -3,7 +3,7 @@ import { Api } from '../api.js';
 import { useApi, useAuth } from '../context.jsx';
 import { ErrorState, EmptyState, LeaveTypeTag, PageHeader, Spinner, StatCard, Avatar } from '../components/ui.jsx';
 import { LeaveTable } from '../components/LeaveTable.jsx';
-import { formatRange, pluralize, ROLE_LABEL } from '../utils.js';
+import { formatLeaveDays, formatRange, pluralize, ROLE_LABEL } from '../utils.js';
 
 function greeting() {
   const h = new Date().getHours();
@@ -51,6 +51,9 @@ export function DashboardPage() {
               <StatCard label="Approved" value={data.mine.counts.APPROVED} tone="approved" onClick={() => navigate('/leaves?status=APPROVED')} />
               <StatCard label="Rejected" value={data.mine.counts.REJECTED} tone="rejected" onClick={() => navigate('/leaves?status=REJECTED')} />
               <StatCard label="Days approved this year" value={data.mine.approvedDaysThisYear} tone="neutral" hint="Working days" />
+              {Object.entries(data.mine.balances?.byType ?? {}).map(([type, balance]) => (
+                <StatCard key={type} label={`${type[0]}${type.slice(1).toLowerCase()} leave`} value={balance.available === null ? 'Unlimited' : `${balance.available} left`} tone="neutral" hint={`${balance.used} used${balance.pending ? ` · ${balance.pending} pending` : ''}`} />
+              ))}
             </div>
           </section>
 

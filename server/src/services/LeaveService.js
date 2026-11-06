@@ -24,6 +24,7 @@ const dateField = (label) =>
 
 const leaveInputSchema = z.object({
   leaveType: z.enum(LEAVE_TYPES, { error: 'Please choose a leave type.' }).default('CASUAL'),
+  dayPart: z.enum(['FULL', 'FIRST_HALF', 'SECOND_HALF']).default('FULL'),
   fromDate: dateField('Start date'),
   toDate: dateField('End date'),
   reason: z
@@ -68,8 +69,8 @@ const RESPOND_SCHEMA = requiredCommentSchema('Please add a reply for your approv
  *   Employee edits while open -> details updated, approval restarts from level 1.
  */
 export class LeaveService {
-  constructor({ db, users, leaves, actions, documents, audit, notifier = NO_OP_NOTIFIER, clock = () => new Date() }) {
-    Object.assign(this, { db, users, leaves, actions, documents, audit, notifier, clock });
+  constructor({ db, users, leaves, holidays, actions, documents, audit, notifier = NO_OP_NOTIFIER, clock = () => new Date() }) {
+    Object.assign(this, { db, users, leaves, holidays, actions, documents, audit, notifier, clock });
   }
 
   today() {
@@ -98,6 +99,7 @@ export class LeaveService {
       ...leave,
       documents: this.documents.listForLeave(leave.id).map(toPublicDocument),
       timeline: this.actions.listForLeave(leave.id),
+      employeeBalances: this.getBalances(leave.employeeId),
       infoRequest: leave.status === STATUS.INFO_REQUESTED ? this.actions.latestInfoRequest(leave.id) : null,
       permissions: this.permissionsFor(leave, user),
     };
@@ -113,6 +115,7 @@ export class LeaveService {
       mine: {
         counts,
         approvedDaysThisYear: this.leaves.approvedDaysInYear(user.id, today.slice(0, 4)),
+        balances: this.getBalances(user.id),
         upcoming: mine.filter((l) => l.status === STATUS.APPROVED && l.toDate >= today).sort(byFromDateAsc).slice(0, 3),
         recent: [...mine].sort((a, b) => b.id - a.id).slice(0, 5),
       },
@@ -149,7 +152,8 @@ export class LeaveService {
     }
     throwIfFieldErrors(fields);
 
-    this.assertNoOverlap(user.id, value.fromDate, value.toDate);
+    this.assertBalance(user.id, value.leaveType, value.fromDate, workingDays);
+    this.assertNoOverlap(user.id, value.fromDate, value.toDate, null, value.dayPart);
     const chain = this.resolveApprovers(user, longLeave);
 
     const leaveId = transaction(this.db, () => {
@@ -200,7 +204,8 @@ export class LeaveService {
       throw AppError.validation('Nothing to save: you have not changed anything.');
     }
 
-    this.assertNoOverlap(user.id, value.fromDate, value.toDate, leave.id);
+    this.assertBalance(user.id, value.leaveType, value.fromDate, workingDays, leave.id);
+    this.assertNoOverlap(user.id, value.fromDate, value.toDate, leave.id, value.dayPart);
     const chain = this.resolveApprovers(user, longLeave);
 
     transaction(this.db, () => {
@@ -228,7 +233,7 @@ export class LeaveService {
         entityType: 'LEAVE',
         entityId: leave.id,
         details: {
-          before: pick(leave, ['leaveType', 'fromDate', 'toDate', 'reason', 'status', 'currentStage']),
+          before: pick(leave, ['leaveType', 'dayPart', 'fromDate', 'toDate', 'reason', 'status', 'currentStage']),
           after: { ...value, workingDays, status: STATUS.PENDING, currentStage: chain.firstStage },
           documentsAdded: files.length,
         },
@@ -394,7 +399,8 @@ export class LeaveService {
     if (!fields.toDate && !parseIsoDate(toDate)) fields.toDate = 'End date is not a valid calendar date.';
 
     if (!fields.fromDate && !fields.toDate) {
-      const assessment = assessDates(fromDate, toDate, this.today());
+      const value = parsed.success ? parsed.data : {};
+      const assessment = assessDates(fromDate, toDate, this.today(), this.holidays?.dates() ?? [], value.dayPart ?? 'FULL');
       Object.assign(fields, assessment.fields);
       workingDays = assessment.workingDays;
     }
@@ -422,13 +428,54 @@ export class LeaveService {
     return { managerApproverId, hodApproverId, firstStage: managerApproverId ? STAGE.MANAGER : STAGE.HOD };
   }
 
-  assertNoOverlap(employeeId, fromDate, toDate, excludeId = null) {
-    const clash = this.leaves.findOverlapping(employeeId, fromDate, toDate, excludeId);
+  assertNoOverlap(employeeId, fromDate, toDate, excludeId = null, dayPart = 'FULL') {
+    const clash = this.leaves.findOverlapping(employeeId, fromDate, toDate, excludeId, dayPart);
     if (clash) {
       throw AppError.conflict(
         `These dates overlap your ${STATUS_LABEL[clash.status]} leave from ${formatHumanDate(clash.fromDate)} to ${formatHumanDate(clash.toDate)} (request #${clash.id}).`,
         { fromDate: 'Overlaps an existing leave request.', toDate: 'Overlaps an existing leave request.' },
       );
+    }
+  }
+
+  getBalances(employeeId, year = this.today().slice(0, 4)) {
+    const holidays = new Set(this.holidays?.dates() ?? []);
+    const rows = this.leaves.leaveDaysForBalance(employeeId, year);
+    const balances = {};
+    for (const type of LEAVE_TYPES) {
+      const allowance = POLICY.YEARLY_ALLOWANCES[type];
+      let used = 0;
+      let pending = 0;
+      for (const row of rows) {
+        if (row.leave_type !== type) continue;
+        const amount = daysInYear(row, Number(year), holidays);
+        if (row.status === STATUS.APPROVED) used += amount;
+        else pending += amount;
+      }
+      balances[type] = { allowance, used, pending, available: allowance === null ? null : Math.max(0, allowance - used - pending) };
+    }
+    return { year: Number(year), byType: balances };
+  }
+
+  assertBalance(employeeId, leaveType, fromDate, requested, excludeId = null) {
+    const allowance = POLICY.YEARLY_ALLOWANCES[leaveType];
+    if (allowance === null) return;
+    const year = Number(fromDate.slice(0, 4));
+    const balances = this.getBalances(employeeId, String(year));
+    let pending = balances.byType[leaveType].pending;
+    // Editing releases the existing request's reservation before checking the new one.
+    if (excludeId !== null) {
+      const current = this.leaves.findById(excludeId);
+      if (current?.leaveType === leaveType && current.status !== STATUS.APPROVED && current.fromDate.slice(0, 4) === String(year)) {
+        pending = Math.max(0, pending - current.workingDays);
+      }
+    }
+    const available = Math.max(0, allowance - balances.byType[leaveType].used - pending);
+    if (requested > available) {
+      const label = leaveType.toLowerCase();
+      throw AppError.validation('Please choose a leave type with enough days available.', {
+        leaveType: `Not enough ${label} leave: ${available} days left this year, ${requested} requested. Choose fewer days or Unpaid leave.`,
+      });
     }
   }
 
@@ -518,7 +565,7 @@ export class LeaveService {
 // Pure helpers (easy to unit test)
 // ---------------------------------------------------------------------------
 
-export function assessDates(fromDate, toDate, today) {
+export function assessDates(fromDate, toDate, today, holidays = [], dayPart = 'FULL') {
   const fields = {};
   const from = parseIsoDate(fromDate);
   const to = parseIsoDate(toDate);
@@ -539,11 +586,23 @@ export function assessDates(fromDate, toDate, today) {
     fields.toDate = `A single request can cover at most ${POLICY.MAX_SPAN_CALENDAR_DAYS} days. Please split longer absences into separate requests.`;
   }
 
-  const workingDays = countWorkingDays(fromDate, toDate);
+  if (dayPart !== 'FULL' && fromDate !== toDate) {
+    fields.toDate = 'Half-day leave can only be requested for a single date.';
+  }
+  const fullWorkingDays = countWorkingDays(fromDate, toDate, holidays);
+  const workingDays = dayPart === 'FULL' ? fullWorkingDays : fullWorkingDays > 0 ? 0.5 : 0;
   if (workingDays === 0 && !fields.toDate) {
-    fields.toDate = 'These dates fall entirely on a weekend, so no leave is needed.';
+    fields.toDate = 'These dates fall entirely on weekends or public holidays, so no leave is needed.';
   }
   return { fields, workingDays };
+}
+
+function daysInYear(row, year, holidays) {
+  if (row.day_part && row.day_part !== 'FULL') return row.from_date.slice(0, 4) === String(year) ? 0.5 : 0;
+  const from = `${year}-01-01` > row.from_date ? `${year}-01-01` : row.from_date;
+  const to = `${year}-12-31` < row.to_date ? `${year}-12-31` : row.to_date;
+  if (from === row.from_date && to === row.to_date) return row.working_days;
+  return countWorkingDays(from, to, holidays);
 }
 
 export function canView(user, leave) {
@@ -586,6 +645,7 @@ const staleConflict = () => AppError.conflict('This request was just updated by 
 function describeChanges(before, after) {
   const changes = [];
   if (before.leaveType !== after.leaveType) changes.push(`Type ${before.leaveType} -> ${after.leaveType}`);
+  if ((before.dayPart ?? 'FULL') !== after.dayPart) changes.push(`Day part ${(before.dayPart ?? 'FULL')} -> ${after.dayPart}`);
   if (before.fromDate !== after.fromDate || before.toDate !== after.toDate) {
     changes.push(
       `Dates ${formatHumanDate(before.fromDate)} - ${formatHumanDate(before.toDate)} -> ${formatHumanDate(after.fromDate)} - ${formatHumanDate(after.toDate)}`,

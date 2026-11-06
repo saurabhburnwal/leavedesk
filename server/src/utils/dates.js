@@ -36,17 +36,18 @@ export function daysBetween(fromIso, toIso) {
 export const isWeekend = (date) => date.getUTCDay() === 0 || date.getUTCDay() === 6;
 
 /**
- * Counts working days (Mon-Fri) between two ISO dates, inclusive.
+ * Counts working days (Mon-Fri, excluding public holidays) between two ISO dates, inclusive.
  * O(n) over the span; the span is capped by policy (60 days) so this is cheap.
  */
-export function countWorkingDays(fromIso, toIso) {
+export function countWorkingDays(fromIso, toIso, holidays = []) {
   const from = parseIsoDate(fromIso);
   const to = parseIsoDate(toIso);
   if (!from || !to || to < from) return 0;
 
   let count = 0;
+  const holidaySet = holidays instanceof Set ? holidays : new Set(holidays);
   for (const day = new Date(from); day <= to; day.setUTCDate(day.getUTCDate() + 1)) {
-    if (!isWeekend(day)) count += 1;
+    if (!isWeekend(day) && !holidaySet.has(toIsoDate(day))) count += 1;
   }
   return count;
 }
