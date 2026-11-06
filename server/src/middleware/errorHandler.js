@@ -32,8 +32,11 @@ export function errorHandler(err, req, res, _next) {
     return res.status(error.status).json({ error: { code: error.code, message: error.message, fields: error.fields } });
   }
 
-  console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, err);
+  console.error(`[${new Date().toISOString()}] [req ${req.id}] ${req.method} ${req.originalUrl}`, err);
   return res.status(500).json({
-    error: { code: 'INTERNAL_ERROR', message: 'Something went wrong on our side. Please try again in a moment.' },
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: `Something went wrong on our side. Please try again in a moment. (Reference: ${req.id})`,
+    },
   });
 }
