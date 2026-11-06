@@ -81,7 +81,9 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   entity_id    INTEGER,
   details      TEXT,               -- JSON
   ip_address   TEXT,
-  created_at   TEXT    NOT NULL
+  created_at   TEXT    NOT NULL,
+  prev_hash    TEXT    NOT NULL,   -- row_hash of the previous entry (hash chain)
+  row_hash     TEXT    NOT NULL    -- SHA-256(prev_hash + this row's content): edits break the chain
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);

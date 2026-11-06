@@ -547,3 +547,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--f
 /* ===== theme toggle (Claude) ===== */
 .theme-toggle { margin-top: 4px; }
 .side-link.theme-toggle .side-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(255, 255, 255, 0.16); }
+
+/* ===== audit integrity badge (Claude) ===== */
+.integrity { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.integrity .badge { font-size: 0.82rem; padding: 6px 12px; }

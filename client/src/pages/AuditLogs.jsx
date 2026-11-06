@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Api } from '../api.js';
+import { Api, request } from '../api.js';
 import { EmptyState, ErrorState, PageHeader, Spinner, Avatar } from '../components/ui.jsx';
 import { formatDate, formatDateTime, ROLE_LABEL, STAGE_LABEL } from '../utils.js';
 
@@ -46,6 +46,41 @@ function describe(entry) {
   }
 }
 
+/** Shows whether the audit hash chain is intact (server recomputes every hash). */
+function IntegrityBadge() {
+  const [state, setState] = useState({ loading: true });
+
+  async function verify() {
+    setState({ loading: true });
+    try {
+      setState({ loading: false, result: await request('GET', '/api/audit-logs/verify') });
+    } catch (error) {
+      setState({ loading: false, error });
+    }
+  }
+
+  useEffect(() => {
+    verify();
+  }, []);
+
+  if (state.loading) return <span className="badge badge-neutral">Verifying integrity…</span>;
+  if (state.error) return <span className="badge badge-neutral">Integrity check unavailable</span>;
+  const { valid, checked, brokenAtId, reason } = state.result;
+  return (
+    <span className="integrity">
+      <span
+        className={`badge ${valid ? 'badge-approved' : 'badge-rejected'}`}
+        title={valid ? 'Every entry is hash-chained to the previous one; nothing was edited or deleted.' : reason}
+      >
+        {valid ? `✓ Integrity verified · ${checked} entries` : `⚠ Tampering detected at entry #${brokenAtId}`}
+      </span>
+      <button className="btn btn-sm btn-ghost" onClick={verify}>
+        Re-verify
+      </button>
+    </span>
+  );
+}
+
 export function AuditLogsPage() {
   const [action, setAction] = useState('');
   const [state, setState] = useState({ items: [], actions: [], hasMore: false, loading: true, error: null });
@@ -75,7 +110,8 @@ export function AuditLogsPage() {
     <>
       <PageHeader
         title="Audit log"
-        subtitle="Every sign-in, workflow decision and document view in your department. Entries cannot be edited or deleted."
+        subtitle="Every sign-in, workflow decision and document view in your department. Entries are append-only and hash-chained, so any edit or deletion is detected."
+        actions={<IntegrityBadge />}
       />
       <div className="toolbar">
         <label className="inline-label" htmlFor="action-filter">
