@@ -1,1 +1,132 @@
-/* Owned by the dashboard redesign. Use the CSS variables from styles.css (no hard-coded colors) so dark mode keeps working. */
+/* Dashboard-only styles. Color values come from the shared theme tokens. */
+.dashboard-page { display: grid; gap: 22px; min-width: 0; }
+.dashboard-greeting { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.dashboard-eyebrow { color: var(--primary); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.dashboard-greeting h1 { margin-top: 2px; font-size: clamp(1.65rem, 3vw, 2.1rem); }
+.dashboard-subtitle { margin-top: 5px; color: var(--muted); }
+.dashboard-apply { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 11px 17px; color: var(--surface); background: linear-gradient(110deg, var(--primary), color-mix(in srgb, var(--primary) 65%, var(--rejected-fg))); box-shadow: 0 7px 18px color-mix(in srgb, var(--primary) 18%, transparent); font-weight: 650; white-space: nowrap; }
+.dashboard-apply:hover { color: var(--surface); text-decoration: none; }
+.dashboard-apply span { font-size: 1.25rem; line-height: 1; }
+
+.dashboard-stats-card, .dashboard-card { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 7%, transparent); }
+.dashboard-stats-card { display: flex; align-items: center; gap: 14px; padding: 24px 24px 22px; overflow: hidden; }
+.dashboard-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex: 1; min-width: 0; }
+.dashboard-summary-stat { position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: 9px; row-gap: 4px; padding: 4px 16px; min-width: 0; }
+.dashboard-stat-link { color: inherit; text-decoration: none; }
+.dashboard-stat-link:hover { text-decoration: none; }
+.dashboard-stat-link:hover .dashboard-stat-label { color: var(--primary); }
+.dashboard-summary-stat:first-child { padding-left: 0; }
+.dashboard-summary-stat:not(:last-child)::after { position: absolute; content: ''; top: 5px; right: 0; height: 42px; border-right: 1px solid var(--border); }
+.dashboard-stat-icon, .dashboard-card-icon { display: grid; place-items: center; color: var(--primary); background: var(--primary-soft); }
+.dashboard-stat-icon { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; }
+.dashboard-stat-icon svg { width: 18px; height: 18px; }
+.dashboard-stat-value { color: var(--text); font-size: 1.35rem; line-height: 1.15; font-weight: 700; white-space: nowrap; }
+.dashboard-stat-value small { color: var(--muted); font-size: .72rem; font-weight: 500; }
+.dashboard-stat-label { color: var(--muted); font-size: .72rem; line-height: 1.3; }
+.dashboard-hero-art { flex: 0 0 150px; width: 150px; height: 108px; object-fit: contain; }
+
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; gap: 18px; }
+.dashboard-card { padding: 20px; }
+.dashboard-card-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 17px; }
+.dashboard-card-heading h2 { font-size: 1rem; }
+.dashboard-card-icon { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 11px; }
+.dashboard-card-icon svg { width: 18px; height: 18px; }
+.dashboard-card-icon.icon-people, .dashboard-card-icon.icon-inbox { color: var(--info-fg); background: var(--info-bg); }
+.dashboard-card-icon.icon-sun { color: var(--pending-fg); background: var(--pending-bg); }
+
+.latest-leaves-list, .team-leaves-list, .holiday-preview-list, .approval-preview-list { list-style: none; margin: 0; padding: 0; }
+.latest-leaves-list { display: grid; gap: 15px; }
+.latest-leaves-list > li { padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.latest-leaves-list > li:last-child { border-bottom: 0; padding-bottom: 0; }
+.latest-leave-topline { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+.latest-leave-type .type-tag { font-size: .75rem; }
+.status-outline { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid currentColor; border-radius: 999px; font-size: .68rem; line-height: 1.25; font-weight: 650; white-space: nowrap; }
+.status-outline-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-pending { color: var(--pending-fg); }
+.status-approved { color: var(--approved-fg); }
+.status-rejected { color: var(--rejected-fg); }
+.status-info_requested { color: var(--info-fg); }
+.status-cancelled { color: var(--cancelled-fg); }
+.leave-date-route { display: flex; align-items: center; justify-content: space-between; gap: 7px; color: var(--muted); font-size: .69rem; }
+.leave-date-route time { white-space: nowrap; }
+.route-dots { flex: 1; min-width: 5px; border-bottom: 1px dotted var(--border); }
+.route-days { color: var(--text); font-size: .68rem; font-weight: 650; white-space: nowrap; }
+.dashboard-show-more { display: inline-flex; align-items: center; gap: 5px; margin-top: 16px; color: var(--primary); font-size: .8rem; font-weight: 650; }
+.dashboard-show-more:hover { text-decoration: underline; }
+.dashboard-empty { padding: 8px 0 12px; color: var(--muted); font-size: .82rem; }
+.dashboard-info-alert { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border: 1px solid var(--info-fg); border-radius: var(--radius); color: var(--info-fg); background: var(--info-bg); font-size: .82rem; }
+.dashboard-info-alert a { color: var(--info-fg); font-weight: 700; white-space: nowrap; }
+.upcoming-own-leaves { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
+.upcoming-own-leaves h3 { margin-bottom: 8px; color: var(--muted); font-size: .74rem; font-weight: 650; }
+.upcoming-own-leaves ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.upcoming-own-leaves li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .73rem; }
+
+.team-leaves-list { display: grid; gap: 14px; }
+.team-leaves-list li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; align-items: center; }
+.team-leave-info, .team-leave-state { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.team-leave-info strong { overflow: hidden; color: var(--text); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.team-leave-info span, .team-leave-state span { color: var(--muted); font-size: .68rem; white-space: nowrap; }
+.team-leave-state { align-items: flex-end; }
+.team-leave-state strong { font-size: .7rem; }
+.team-state-now strong { color: var(--approved-fg); }
+.team-state-planned strong { color: var(--info-fg); }
+.team-leaves-list .avatar { width: 32px; height: 32px; }
+
+.holiday-preview-list { display: grid; gap: 10px; }
+.holiday-preview-list li { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 9px; align-items: center; min-height: 42px; }
+.holiday-date-badge { display: inline-grid; place-items: center; min-height: 32px; padding: 0 5px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); color: var(--primary); font-size: .65rem; font-weight: 700; text-align: center; white-space: nowrap; }
+.holiday-preview-list strong { overflow: hidden; color: var(--text); font-size: .74rem; text-overflow: ellipsis; white-space: nowrap; }
+.holiday-weekday { color: var(--muted); font-size: .68rem; }
+
+.approvals-dashboard-card { padding-bottom: 16px; }
+.approvals-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 5px 16px; margin: -4px 0 12px; color: var(--muted); font-size: .82rem; }
+.approvals-summary strong { color: var(--text); font-size: 1.1rem; }
+.approvals-summary .dashboard-show-more { margin-top: 0; }
+.approval-preview-list li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); }
+.approval-preview-list li > div { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.approval-preview-list li > div strong { overflow: hidden; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.approval-preview-list li > div span { color: var(--muted); font-size: .7rem; }
+.approval-preview-list li > a:last-child { font-size: .75rem; font-weight: 650; white-space: nowrap; }
+
+@media (max-width: 1050px) {
+  .dashboard-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .upcoming-holidays-card { grid-column: span 2; }
+  .holiday-preview-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .dashboard-page { gap: 16px; }
+  .dashboard-greeting { align-items: flex-start; }
+  .dashboard-apply { padding: 9px 12px; font-size: .75rem; }
+  .dashboard-stats-card { padding: 16px; }
+  .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 13px; }
+  .dashboard-summary-stat { padding: 3px 9px; }
+  .dashboard-summary-stat:nth-child(odd) { padding-left: 0; }
+  .dashboard-summary-stat:nth-child(even) { padding-right: 0; }
+  .dashboard-summary-stat:nth-child(2)::after { display: none; }
+  .dashboard-summary-stat:nth-child(1), .dashboard-summary-stat:nth-child(2) { padding-bottom: 9px; border-bottom: 1px solid var(--border); }
+  .dashboard-summary-stat:nth-child(3)::after { display: block; }
+  .dashboard-stat-value { font-size: 1.15rem; }
+  .dashboard-stat-label { font-size: .67rem; }
+  .dashboard-hero-art { flex: 0 0 75px; width: 75px; height: 75px; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .upcoming-holidays-card { grid-column: auto; }
+  .holiday-preview-list { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-card { padding: 17px; }
+}
+@media (max-width: 430px) {
+  .dashboard-greeting { flex-direction: column; }
+  .dashboard-apply { align-self: flex-start; }
+  .dashboard-stats-card { gap: 4px; padding: 13px 11px; }
+  .dashboard-hero-art { flex-basis: 54px; width: 54px; height: 62px; }
+  .dashboard-summary-stat { grid-template-columns: 28px minmax(0, 1fr); column-gap: 6px; padding-left: 6px; padding-right: 6px; }
+  .dashboard-stat-icon { width: 28px; height: 28px; border-radius: 9px; }
+  .dashboard-stat-icon svg { width: 15px; height: 15px; }
+  .dashboard-stat-value { font-size: 1rem; }
+  .dashboard-stat-label { font-size: .62rem; }
+  .leave-date-route { gap: 5px; font-size: .64rem; }
+  .team-leaves-list li { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 7px; }
+  .team-leave-info span, .team-leave-state span { font-size: .62rem; }
+  .approval-preview-list li { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .approval-preview-list li .status-outline { grid-column: 2; justify-self: start; }
+  .approval-preview-list li > a:last-child { grid-column: 3; grid-row: 1 / span 2; }
+}

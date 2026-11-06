@@ -215,4 +215,14 @@ export class LeaveRepository {
       .all(user.id, toDate, fromDate, user.id, user.id, user.id, user.role, user.departmentId)
       .map(toLeave);
   }
+
+  /** Approved leave for an employee's coworkers with the same reporting manager. */
+  approvedTeamLeaveForEmployee(employeeId, managerId, fromDate, toDate) {
+    if (!managerId) return [];
+    const sql = `${SELECT_LEAVE}
+      WHERE lr.status = 'APPROVED' AND lr.employee_id <> ?
+        AND e.manager_id = ? AND lr.from_date <= ? AND lr.to_date >= ?
+      ORDER BY lr.from_date ASC, lr.id ASC`;
+    return this.db.prepare(sql).all(employeeId, managerId, toDate, fromDate).map(toLeave);
+  }
 }

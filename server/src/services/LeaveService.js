@@ -120,6 +120,9 @@ export class LeaveService {
         recent: [...mine].sort((a, b) => b.id - a.id).slice(0, 5),
       },
       approver: null,
+      team: user.role === 'EMPLOYEE'
+        ? this.leaves.approvedTeamLeaveForEmployee(user.id, user.managerId, today, addDays(today, 30))
+        : [],
     };
 
     if (isApprover(user)) {
